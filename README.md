@@ -6,1108 +6,707 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/iishong0w0/Axiom-AI)
 ![Repo Size](https://img.shields.io/github/repo-size/iishong0w0/Axiom-AI)
 
-# [**>> Download Latest Release <<**](https://github.com/iishong0w0/Axiom-AI/releases/latest)
-# [Discord Community](https://discord.gg/h4dEh3b8Bt)  
+<h1>Axiom AI</h1>
+<p>Adaptive aim assistance powered by computer vision to support gamers who need it most.</p>
 
-![Control Panel](https://raw.githubusercontent.com/iisHong0w0/Axiom-AI/refs/heads/main/%E9%9D%A2%E6%9D%BF.png)
+<p>
+  <a href="https://github.com/iishong0w0/Axiom-AI/releases/latest"><strong>Download Latest Release</strong></a>
+  ·
+  <a href="https://discord.gg/h4dEh3b8Bt">Discord Community</a>
+</p>
 
-# **If this project helps you, please give us a ⭐ Star!**
+<img src="https://raw.githubusercontent.com/iisHong0w0/Axiom-AI/refs/heads/main/%E9%9D%A2%E6%9D%BF.png" alt="Control panel screenshot" width="720" />
 
-[English](#english) | [中文](#中文)
+<p><strong>If this project helps you, please give us a ⭐ Star!</strong></p>
 
 </div>
 
 ---
 
+**Languages**: [English](#english) | [中文](#中文)
+
+---
+
 # English
 
-## 🎯 Overview
+## Table of Contents
+- [Overview](#overview)
+- [Feature Highlights](#feature-highlights)
+- [Tech Stack & Dependencies](#tech-stack--dependencies)
+- [System Requirements](#system-requirements)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration Reference](#configuration-reference)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Community & Support](#community--support)
+- [FAQ](#faq)
+- [Disclaimer](#disclaimer)
+- [Acknowledgements](#acknowledgements)
 
-**Axiom AI** is a sophisticated computer vision application designed for real-time object detection and interaction. Built with advanced AI technology and optimized for high-performance operation, Axiom AI provides intelligent assistance to enhance gaming experiences for users who need it most.
+## Overview
 
-### 🌟 Who Is Axiom For?
+Axiom AI is a computer vision–driven overlay and mouse control suite designed to deliver real-time target detection and aim assistance for players who need accessibility support. By combining YOLO-based object detection with configurable control logic, the project helps users achieve smoother, more reliable input in demanding gaming scenarios.
 
-Axiom is designed for gamers who are at a disadvantage compared to regular players, including but not limited to:
-- Players with **physical disabilities** (hand tremors, Parkinson's disease, neurological disorders, paralysis)
-- Players with **visual impairments** (colorblindness, poor vision, nystagmus, blind players)
-- Players with **cognitive challenges** (ADHD, autism, anxiety disorders, spatial perception disorders)
-- Players with **medical conditions** (chronic fatigue syndrome, brain injury sequelae, sleep deprivation)
-- Players with **hardware limitations** (poor FPS performance, low-quality peripherals, cloud gaming)
-- Players with **environmental constraints** (no air conditioning, limited mouse space, poor ergonomics)
-- **Beginners** and untrained players who want to learn and improve
-- Players grieving from parental loss or experiencing emotional challenges
+**Designed for players who:**
 
-**⚠️ Important Notice**: This software is licensed under the PolyForm Noncommercial License 1.0.0. **Commercial use is strictly prohibited.**
+- live with physical disabilities such as hand tremors, Parkinson's disease, or paralysis
+- experience visual impairments including color blindness, low vision, or nystagmus
+- face cognitive challenges such as ADHD, autism, anxiety disorders, or spatial perception issues
+- manage chronic medical conditions or fatigue
+- are limited by lower-end hardware, peripherals, or cloud gaming latency
+- play in constrained environments with reduced space or ergonomics
+- are beginners learning core aiming skills or returning to games after a break
 
----
+> ⚠️ **Important:** Axiom AI is licensed under the PolyForm Noncommercial License 1.0.0. Commercial usage of any kind is strictly prohibited.
 
-## ✨ Key Features
+## Feature Highlights
 
-### 🤖 AI-Powered Detection
-- **YOLO-based object detection** with ONNX and PyTorch (.pt) model support
-- **Real-time inference** with DirectML acceleration
-- **Customizable confidence threshold** for detection accuracy
-- **Single target mode** to focus on the nearest enemy
+### AI-Assisted Target Acquisition
+- Ultralytics YOLOv8 detection pipeline with support for ONNX (`.onnx`) and PyTorch (`.pt`) models
+- Real-time inference accelerated by ONNX Runtime (DirectML) or PyTorch CPU backends
+- Configurable confidence thresholds, detection regions, and FOV radius
+- Optional single-target mode to prioritise the nearest enemy
 
-### 🎯 Intelligent Targeting System
-- **PID controller** for smooth and accurate mouse movement
-- **Separate X/Y axis tuning** for precise control
-- **Multiple aiming modes**: Head, body, or both
-- **FOV (Field of View) system** with mouse tracking
-- **Adjustable detection region** based on screen center
+### Intelligent Aiming Controls
+- Tunable PID controller for smooth, predictable mouse movement on both axes
+- Separate X/Y gain, integral, and derivative settings for fine-grained adjustments
+- Multiple aim modes (head, body, mixed) plus customisable aim and toggle hotkeys
+- Hardware-level and Windows API mouse movement methods to match different games
 
-### 🖱️ Advanced Mouse Control
-- **Multiple mouse movement methods**: `mouse_event`, `ddxoft`
-- **Multiple mouse click methods** for compatibility
-- **Auto-fire functionality** with configurable delay and interval
-- **Customizable hotkeys** for all actions
+### Visual Feedback & User Experience
+- PyQt6 overlay with detection boxes, confidence readouts, and FOV indicator
+- Real-time status panel showing FPS, latency, and detection statistics
+- Configurable colour coding for different target areas and overlay elements
 
-### 🎨 Visual Feedback
-- **PyQt6-based overlay** showing detection boxes
-- **FOV indicator** for visual reference
-- **Confidence score display** for detected objects
-- **Real-time status panel** with FPS and detection info
-- **Color-coded target markers** for different aim parts
+### Performance & Reliability
+- CPU affinity, process/thread priority controls, and detection interval tuning
+- Optimised ONNX runtime configuration for minimal inference latency
+- Performance mode presets to balance responsiveness and resource usage
 
-### ⚡ Performance Optimization
-- **CPU optimization** with adjustable process/thread priority
-- **Multi-core support** with CPU affinity settings
-- **Optimized ONNX runtime** configuration
-- **Minimal latency** detection pipeline
-- **Performance mode** for maximum responsiveness
+### Quality-of-Life Enhancements
+- Auto-fire with adjustable delay, interval, and target preference
+- Sound alerts for target acquisition, with frequency, duration, and cooldown settings
+- Keep-detecting mode, model presets, multilingual interface (English / 中文), and more
 
-### 🔊 Additional Features
-- **Sound alerts** when target is detected
-- **Keep detecting mode** for continuous operation
-- **Configurable detection interval**
-- **Automatic Windows scaling detection**
-- **Multi-language support** (English, 中文)
+## Tech Stack & Dependencies
 
----
+- **Language:** Python 3.11+
+- **GUI & Overlay:** PyQt6
+- **Computer Vision:** Ultralytics YOLOv8, OpenCV, ONNX Runtime (DirectML), PyTorch (CPU)
+- **Screen Capture:** MSS
+- **Numerical Computing:** NumPy, TorchVision, Torchaudio
+- **System Integration:** pywin32, psutil, custom `ddxoft.dll`
+- **Packaging & Distribution:** PyInstaller (optional), Windows batch launcher
 
-## 🧠 Tech Stack
+See [`requirements.txt`](requirements.txt) for the full list of pinned packages.
 
-- **Programming Language**: Python 3.11+
-- **GUI Framework**: PyQt6
-- **Computer Vision**: Ultralytics YOLOv8, ONNX Runtime (DirectML), OpenCV
-- **Screen Capture**: MSS (Multiple Screen Shots)
-- **Numerical Computing**: NumPy, PyTorch (CPU)
-- **System Integration**: pywin32, psutil, custom `ddxoft.dll`
-- **Packaging & Distribution**: PyInstaller (optional), Windows batch launcher
+## System Requirements
 
-Additional dependencies are listed in [`requirements.txt`](requirements.txt).
+### Minimum
+- **OS:** Windows 10 64-bit
+- **Python:** 3.11+
+- **RAM:** 16 GB
+- **GPU:** NVIDIA GTX 1060 / AMD RX 580 or equivalent
+- **Storage:** 500 MB free space
 
----
+### Recommended
+- **OS:** Windows 11 64-bit
+- **Python:** 3.11+
+- **RAM:** 32 GB or higher
+- **GPU:** NVIDIA RTX 3060 or better
+- **Storage:** 1 GB free space
 
-## 💻 System Requirements
+## Installation
 
-### Minimum Requirements
-- **OS**: Windows 10 (64-bit) or higher
-- **Python**: 3.11 or higher
-- **RAM**: 16GB
-- **Graphics**: GTX 1060 / RX 580 or equivalent
-- **Storage**: 500MB free space
+### Quick Install (Recommended)
 
-### Recommended Requirements
-- **OS**: Windows 11 (64-bit)
-- **Python**: 3.11+
-- **RAM**: 32GB or higher
-- **Graphics**: RTX 3060 or better
-- **Storage**: 1GB free space
+1. **Download the latest release** from the [Releases page](https://github.com/iishong0w0/Axiom-AI/releases/latest) and extract the ZIP archive.
+2. **Install Python 3.11** using the bundled `python-3.11.0-amd64.exe`. Ensure that **Add python.exe to PATH** is selected during installation.
+3. **Launch Axiom AI** by double-clicking `啟動Launcher.bat`. The launcher will install all dependencies automatically on first run.
+4. Wait for the application window and overlay to appear. Subsequent launches will reuse the cached environment.
 
----
-
-## 🚀 Installation Guide
-
-### Option 1: Quick Install (Recommended for Beginners)
-
-1. **Download the Latest Release**
-   - Visit the [Releases page](https://github.com/iishong0w0/Axiom-AI/releases/latest)
-   - Download the latest ZIP file
-
-2. **Install Python**
-   - Run the included `python-3.11.0-amd64.exe` installer
-   - ⚠️ **IMPORTANT**: Check "Add python.exe to PATH" during installation
-   - Complete the installation wizard
-
-3. **Launch Axiom AI**
-   - Extract the downloaded ZIP file to a folder
-   - Double-click `啟動Launcher.bat` to start the application
-   - The launcher will automatically install dependencies on first run
-
-### Option 2: Manual Installation (For Developers)
+### Manual Setup (Developers)
 
 ```bash
 # Clone the repository
 git clone https://github.com/iishong0w0/Axiom-AI.git
 cd Axiom-AI
 
-# Create a virtual environment (recommended)
+# (Optional) create and activate a virtual environment
 python -m venv .venv
-
-# Activate virtual environment
-# On Windows:
+# Windows
 .venv\Scripts\activate
-# On Linux/Mac:
+# Linux / macOS
 source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Navigate to src directory and run
+# Run the application
 cd src
 python main.py
 ```
 
-### Verify Installation
+### Verify Your Setup
 
-After installation, you should see:
-- ✅ Main GUI window with control panel
-- ✅ Status panel showing FPS and detection info
-- ✅ No error messages in the console
+After installation you should see:
 
-If you encounter issues, see the [Troubleshooting](#troubleshooting) section.
+- ✅ The main control panel window
+- ✅ Overlay elements (FOV circle, detection boxes, confidence values)
+- ✅ Status panel displaying FPS and detection statistics
 
----
+If errors appear in the console, consult the [Troubleshooting](#troubleshooting) section below.
 
-## 🎮 Quick Start Guide
+## Quick Start
 
-### Basic Usage
+1. **Launch the application** from the `src` directory: `python main.py`.
+2. **Select an AI model** in the settings panel. Place `.onnx` or `.pt` files in `src/模型/` if you want to use custom models (default: `Roblox.onnx`).
+3. **Adjust detection settings** such as FOV size, confidence threshold, aim part, and single-target mode to match your game.
+4. **Configure hotkeys** for aiming, toggling, and auto-fire. The default toggle key is `Insert`.
+5. **Start detecting** by pressing `Insert`. Hold one of the configured aim keys to engage the PID-driven mouse movement.
+6. **Observe visual feedback** on the overlay to confirm detection boxes, confidence, and status information.
 
-1. **Launch the Application**
-   ```bash
-   # From the src directory
-   python main.py
-   ```
+### Advanced Tips
 
-2. **Initial Setup**
-   - The application will automatically detect your screen resolution
-   - A settings GUI will appear with default configurations
-   - The overlay will start showing FOV and detection boxes
+- Tune `Kp`, `Ki`, and `Kd` for each axis to balance responsiveness and smoothness. Start with small changes (±0.02).
+- Lower the detection interval (e.g., `0.01 → 0.005`) for faster reactions, or increase it to reduce CPU usage.
+- Switch between `mouse_event` and `ddxoft` mouse methods to match your game's input requirements.
+- Enable performance mode by raising process/thread priority if you experience latency.
 
-3. **Configure Your Model**
-   - Click on the model dropdown in the settings panel
-   - Select your desired AI model (`.onnx` or `.pt` files from the `模型` folder)
-   - Default model: `Roblox.onnx` (640x640 input size)
+## Configuration Reference
 
-4. **Adjust Detection Settings**
-   - **FOV Size**: Adjust the field of view (default: 222px)
-   - **Confidence Threshold**: Set minimum detection confidence (default: 0.11)
-   - **Aim Part**: Choose target area (head/body/both)
-   - **Single Target Mode**: Enable to track only the closest enemy
+All runtime settings are stored in `src/config.json` and can also be adjusted through the GUI.
 
-5. **Configure Hotkeys**
-   - **Aim Keys**: Mouse buttons to activate aiming (default: Left Click, Right Click, X2 Button)
-   - **Toggle Key**: Press `Insert` to enable/disable the system
-   - **Auto-Fire Key**: Configure automatic shooting (default: X2 Button)
-
-6. **Start Detection**
-   - Press `Insert` to toggle the AI detection on/off
-   - Hold one of the configured aim keys to activate targeting
-   - Visual feedback will appear showing detected objects and FOV
-
-### Advanced Configuration
-
-#### PID Controller Tuning
-
-Fine-tune mouse movement smoothness:
-
-```
-Kp (Proportional): Controls response speed (default: 0.26)
-Ki (Integral):     Corrects steady-state error (default: 0.0)
-Kd (Derivative):   Reduces overshoot and oscillation (default: 0.0)
-```
-
-- **Higher Kp**: Faster response, may cause overshoot
-- **Higher Ki**: Better accuracy, may cause instability
-- **Higher Kd**: Smoother movement, may reduce responsiveness
-
-#### Performance Optimization
-
-Enable high-performance mode:
-- Set **Process Priority** to "High" or "Realtime"
-- Set **Thread Priority** to "High"
-- Enable **CPU Optimization**
-- Reduce **Detection Interval** (minimum: 1ms)
-
-#### Mouse Control Methods
-
-- **mouse_event**: Standard Windows API (compatible with most games)
-- **ddxoft**: Hardware-level mouse driver (requires admin rights)
-
----
-
-## ⚙️ Configuration Reference
-
-### Main Configuration File: `config.json`
-
-The application saves all settings to `src/config.json`. Here are the key parameters:
-
-```json
+```jsonc
 {
-  "fov_size": 222,                    // Field of view size in pixels
-  "min_confidence": 0.11,             // Minimum detection confidence (0.0-1.0)
-  "aim_part": "head",                 // Target part: "head", "body", "both"
-  "single_target_mode": true,         // Track only closest target
-  "keep_detecting": true,             // Always detect (even when not aiming)
-  "fov_follow_mouse": true,           // FOV follows mouse cursor
-  
-  // PID Controller (X-axis)
+  "fov_size": 222,
+  "min_confidence": 0.11,
+  "aim_part": "head",
+  "single_target_mode": true,
+  "keep_detecting": true,
+  "fov_follow_mouse": true,
   "pid_kp_x": 0.26,
   "pid_ki_x": 0.0,
   "pid_kd_x": 0.0,
-  
-  // PID Controller (Y-axis)
   "pid_kp_y": 0.26,
   "pid_ki_y": 0.0,
   "pid_kd_y": 0.0,
-  
-  // Hotkeys (Virtual Key Codes)
-  "AimKeys": [1, 6, 2],               // 0x01=Left Click, 0x06=X2, 0x02=Right Click
-  "aim_toggle_key": 45,               // Insert key
-  "auto_fire_key": 6,                 // X2 button
-  "auto_fire_key2": 4,                // Middle mouse button
-  
-  // Auto-Fire Settings
-  "auto_fire_delay": 0.0,             // Delay before shooting (seconds)
-  "auto_fire_interval": 0.08,         // Time between shots (seconds)
-  "auto_fire_target_part": "both",    // Auto-fire target preference
-  
-  // Performance Settings
-  "detect_interval": 0.01,            // Detection loop delay (seconds)
-  "cpu_optimization": true,           // Enable CPU optimizations
-  "process_priority": "high",         // "normal", "high", "realtime"
-  "thread_priority": "high",          // Thread priority level
-  
-  // Sound Alerts
-  "enable_sound_alert": false,        // Enable beep on target detection
-  "sound_frequency": 1000,            // Beep frequency (Hz)
-  "sound_duration": 100,              // Beep duration (ms)
-  "sound_interval": 200,              // Minimum time between beeps (ms)
-  
-  // Visual Settings
-  "show_fov": true,                   // Show FOV circle
-  "show_boxes": true,                 // Show detection boxes
-  "show_confidence": true,            // Show confidence scores
-  "show_status_panel": true,          // Show status overlay
-  
-  // Target Area Ratios
-  "head_width_ratio": 0.38,           // Head region width (0.0-1.0)
-  "head_height_ratio": 0.26,          // Head region height (0.0-1.0)
-  "body_width_ratio": 0.87,           // Body region width (0.0-1.0)
-  
-  // Mouse Control
-  "mouse_move_method": "mouse_event", // "mouse_event" or "ddxoft"
-  "mouse_click_method": "ddxoft"      // Mouse click method
+  "AimKeys": [1, 6, 2],
+  "aim_toggle_key": 45,
+  "auto_fire_interval": 0.08,
+  "auto_fire_target_part": "both",
+  "detect_interval": 0.01,
+  "cpu_optimization": true,
+  "process_priority": "high",
+  "thread_priority": "high",
+  "mouse_move_method": "mouse_event",
+  "mouse_click_method": "ddxoft",
+  "enable_sound_alert": false,
+  "show_status_panel": true
 }
 ```
 
+### Key Options
+
+| Option | Description | Default |
+| --- | --- | --- |
+| `fov_size` | Field-of-view radius in pixels | `222` |
+| `min_confidence` | Smallest confidence score for detections | `0.11` |
+| `aim_part` | Target preference (`head`, `body`, `both`) | `head` |
+| `AimKeys` | Mouse buttons that activate aiming | `[1, 6, 2]` |
+| `auto_fire_interval` | Delay between auto-fire shots (seconds) | `0.08` |
+| `detect_interval` | Sleep time between detection loops (seconds) | `0.01` |
+| `mouse_move_method` | Mouse movement backend (`mouse_event`, `ddxoft`) | `mouse_event` |
+| `show_status_panel` | Toggle the FPS / status overlay | `true` |
+
 ### Environment Variables
 
-No environment variables are required. All configuration is done through `config.json` and the settings GUI.
+No environment variables are required. All configuration is handled via `config.json` or the in-app settings UI.
 
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 Axiom-AI_Aimbot/
-├── src/                          # Source code directory
-│   ├── main.py                   # Main application entry point
-│   ├── config.py                 # Configuration class and management
-│   ├── config.json               # User settings file
-│   ├── inference.py              # AI inference and preprocessing
-│   ├── win_utils.py              # Windows API utilities
-│   ├── overlay.py                # PyQt6 overlay for visual feedback
-│   ├── settings_gui.py           # Settings GUI interface
-│   ├── status_panel.py           # Status panel overlay
-│   ├── about.py                  # About dialog
-│   ├── preset_manager.py         # Configuration preset manager
-│   ├── config_manager.py         # Advanced configuration management
-│   ├── language_manager.py       # Multi-language support
-│   ├── language_data.py          # Language strings database
-│   ├── scaling_warning_dialog.py # Windows scaling detection
-│   ├── ddxoft.dll                # Hardware mouse driver library
-│   ├── logo.ico                  # Application icon
-│   └── 模型/                     # AI models directory
-│       └── *.onnx, *.pt          # YOLO models
-├── requirements.txt              # Python dependencies
-├── LICENSE                       # PolyForm Noncommercial License
-├── README.md                     # This file
-├── 啟動Launcher.bat              # Windows launcher script
-├── 常見問題FAQ.txt               # Frequently Asked Questions
-├── 面板.png                      # Screenshot for documentation
-├── python-3.11.0-amd64.exe       # Python installer (bundled)
-└── index.html                    # Web interface (optional)
+├── src/
+│   ├── main.py
+│   ├── config.py
+│   ├── config.json
+│   ├── inference.py
+│   ├── overlay.py
+│   ├── settings_gui.py
+│   ├── status_panel.py
+│   ├── config_manager.py
+│   ├── preset_manager.py
+│   ├── language_manager.py
+│   ├── language_data.py
+│   ├── scaling_warning_dialog.py
+│   ├── win_utils.py
+│   ├── ddxoft.dll
+│   └── 模型/
+│       └── *.onnx, *.pt
+├── requirements.txt
+├── LICENSE
+├── README.md
+├── 啟動Launcher.bat
+├── 常見問題FAQ.txt
+├── 面板.png
+├── python-3.11.0-amd64.exe
+└── index.html
 ```
 
----
+## Troubleshooting
 
-## 🛠️ Troubleshooting
+#### Application does not start
+- Confirm that Python 3.11+ is installed and added to PATH.
+- Run from a terminal to capture errors: `cd src && python main.py`.
+- Reinstall Python if the launcher still fails to create the environment.
 
-### Common Issues and Solutions
+#### ModuleNotFoundError
+- Reinstall dependencies: `pip install -r requirements.txt --upgrade`.
+- Ensure the virtual environment (if used) is activated before running the app.
 
-#### ❌ Application Won't Start
+#### No detection or low FPS
+- Verify that a model file exists under `src/模型/`.
+- Reduce FOV size or raise the detection interval to balance performance.
+- Close resource-intensive background applications and update GPU drivers.
 
-**Problem**: Double-clicking launcher does nothing or shows errors.
+#### Mouse does not move
+- Check that your aim keys match the configured values.
+- Try switching `mouse_move_method` between `mouse_event` and `ddxoft`.
+- Run the application as Administrator if your game requires elevated privileges.
+- Increase `pid_kp_x` / `pid_kp_y` for stronger corrective movement.
 
-**Solutions**:
-1. Ensure Python 3.11+ is installed
-2. Verify "Add python.exe to PATH" was checked during installation
-3. Reinstall Python with correct options
-4. Try running from command line: `cd src && python main.py`
+#### Overlay not visible
+- Ensure `show_fov` and `show_boxes` remain enabled in the settings.
+- Use Windowed or Borderless display modes and Alt+Tab to refresh the overlay.
+- Disable competing overlays (Windows Game Bar, GPU overlays, etc.).
 
-#### ❌ ModuleNotFoundError
+#### Access denied or permission errors
+- Run the launcher or `main.py` with Administrator rights.
+- Confirm that antivirus or anti-cheat software is not blocking `ddxoft.dll`.
 
-**Problem**: Missing Python package errors.
+#### High CPU usage
+- Increase `detect_interval` (e.g., from `0.01` to `0.03`).
+- Reduce FOV size or disable `keep_detecting`.
+- Hide the status panel if you do not need live metrics.
 
-**Solution**:
-```bash
-# Reinstall all dependencies
-pip install -r requirements.txt --upgrade
-```
+## Contributing
 
-#### ❌ No Detection / Low FPS
-
-**Problem**: AI detection not working or very slow.
-
-**Solutions**:
-1. Check if model file exists in `src/模型/` directory
-2. Lower FOV size for better performance
-3. Increase `detect_interval` (e.g., 0.02 or 0.03)
-4. Close other resource-intensive applications
-5. Ensure GPU drivers are up to date
-6. Try switching to a smaller model file
-
-#### ❌ Mouse Not Moving
-
-**Problem**: Detection works but mouse doesn't move.
-
-**Solutions**:
-1. Check if aim keys are properly configured
-2. Verify anti-cheat software isn't blocking input
-3. Try switching `mouse_move_method` to "ddxoft"
-4. Run application as Administrator (required for some games)
-5. Increase PID Kp value for more aggressive movement
-
-#### ❌ Access Denied / Permission Errors
-
-**Problem**: Application requires administrator rights.
-
-**Solution**:
-- Right-click launcher or `main.py` and select "Run as Administrator"
-- Some mouse control methods require elevated privileges
-
-#### ❌ Overlay Not Visible
-
-**Problem**: FOV and boxes not showing.
-
-**Solutions**:
-1. Check `show_fov` and `show_boxes` settings
-2. Ensure game is in Windowed or Borderless mode (not Fullscreen)
-3. Try Alt+Tab to refresh overlay
-4. Disable Windows Game Bar and overlays
-
-#### ❌ High CPU Usage
-
-**Problem**: Application uses too much CPU.
-
-**Solutions**:
-1. Increase `detect_interval` (default: 0.01 → 0.03)
-2. Reduce FOV size
-3. Disable `keep_detecting` mode
-4. Close status panel (set `show_status_panel: false`)
-
----
-
-## 🤝 Contributing
-
-We welcome contributions to improve Axiom AI! Here's how you can help:
-
-### Development Setup
+Contributions are welcome! To propose changes:
 
 ```bash
-# Fork and clone the repository
+# Fork and clone your copy
 git clone https://github.com/YOUR_USERNAME/Axiom-AI.git
 cd Axiom-AI
 
-# Create a branch for your feature
+# Create a feature branch
 git checkout -b feature/your-feature-name
 
-# Install development dependencies
+# Install dependencies and make your changes
 pip install -r requirements.txt
-
-# Make your changes and test thoroughly
 
 # Commit and push
 git add .
-git commit -m "Add: your feature description"
+git commit -m "feat: describe your change"
 git push origin feature/your-feature-name
 ```
 
-### Contribution Guidelines
+**Guidelines**
+- Follow the existing Python style (PEP 8) and project architecture.
+- Update documentation or language strings when adding new features.
+- Test on multiple Windows versions and hardware configurations when possible.
+- Ensure changes remain compliant with the PolyForm Noncommercial License.
 
-- **Code Style**: Follow existing Python conventions (PEP 8)
-- **Documentation**: Update README if adding new features
-- **Testing**: Test on multiple Windows versions and hardware
-- **Language**: Support both English and Chinese in UI elements
-- **Performance**: Ensure changes don't negatively impact FPS
-- **License**: All contributions must comply with PolyForm Noncommercial License
+## License
 
-### Areas for Contribution
+This project is distributed under the **PolyForm Noncommercial License 1.0.0**. You may modify and share the software for personal, educational, or research purposes, but **any commercial use is forbidden**. Review the full terms in the [LICENSE](LICENSE) file or on the [PolyForm Project website](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
-- 🐛 Bug fixes and stability improvements
-- ⚡ Performance optimizations
-- 🎨 UI/UX enhancements
-- 📚 Documentation and tutorials
-- 🌐 Translations to other languages
-- 🤖 New AI models and training data
-- 🎮 Game-specific profiles and presets
+## Community & Support
 
----
+- **Discord:** [Join the community](https://discord.gg/h4dEh3b8Bt)
+- **GitHub Issues:** [Report bugs or request features](https://github.com/iishong0w0/Axiom-AI/issues)
+- **Email:** [iis20160512@gmail.com](mailto:iis20160512@gmail.com)
 
-## 📄 License
+## FAQ
 
-This project is licensed under the **PolyForm Noncommercial License 1.0.0**.
+**Is this a cheat or hack?**  
+Axiom AI is built as an accessibility tool. Use it responsibly and respect each game's terms of service.
 
-### Key Restrictions:
+**Will I get banned for using it?**  
+No guarantee can be made for online games. Use at your own risk.
 
-- ❌ **No Commercial Use**: This software cannot be used for any commercial purpose
-- ❌ **No Selling**: Cannot sell or charge for the software or services using it
-- ❌ **No Business Use**: Cannot use in connection with any business activity
-- ✅ **Personal Use**: Free for personal, educational, and research purposes
-- ✅ **Modification**: You may modify and distribute the software
-- ✅ **Attribution**: Must include original license and copyright notice
+**Can I use it in competitive play?**  
+Competitive or tournament environments may forbid external assistance. Understand the rules before using it.
 
-### What Counts as Commercial Use?
+**Which games are supported?**  
+Axiom AI is model-agnostic. Provide a suitable YOLO model for your target game (default model ships for Roblox).
 
-- Using the software to provide paid services
-- Using the software as part of a commercial product
-- Using the software to generate revenue (directly or indirectly)
-- Using the software in any business, even if you don't charge for it
+**How do I train my own model?**  
+Create a dataset and train a YOLOv8 model. The [Ultralytics documentation](https://docs.ultralytics.com) contains a full workflow.
 
-### What Is Allowed?
+**Why is detection slow?**  
+Try reducing FOV size, raising the detection interval, closing background tasks, or using a lighter model.
 
-- Personal gaming and entertainment
-- Educational purposes and learning
-- Research and development
-- Sharing with friends (non-commercial)
+## Disclaimer
 
-For full license details, see [LICENSE](LICENSE) or visit [PolyForm Noncommercial License](https://polyformproject.org/licenses/noncommercial/1.0.0/).
+This software is provided "as is" without warranty of any kind. The developers are not responsible for:
 
----
-
-## 📞 Contact & Support
-
-### Support Channels
-
-- **Discord Server**: [Join our community](https://discord.gg/h4dEh3b8Bt) - For general support, discussions, and community help
-- **GitHub Issues**: [Report bugs](https://github.com/iishong0w0/Axiom-AI/issues) - For bug reports and feature requests
-- **Email**: [iis20160512@gmail.com](mailto:iis20160512@gmail.com) - For direct communication with the developer
-
-### Links
-
-- **GitHub**: [@iishong0w0](https://github.com/iishong0w0)
-- **Repository**: [Axiom-AI](https://github.com/iishong0w0/Axiom-AI)
-- **Releases**: [Latest Version](https://github.com/iishong0w0/Axiom-AI/releases/latest)
-
----
-
-## 📝 Frequently Asked Questions (FAQ)
-
-**Q: Is this a cheat/hack?**  
-A: Axiom AI is an accessibility tool designed to help players with disabilities. Use responsibly and in accordance with game terms of service.
-
-**Q: Will I get banned for using this?**  
-A: We cannot guarantee safety in any online game. Use at your own risk and follow game rules.
-
-**Q: Can I use this for competitive play?**  
-A: This tool is intended for casual play and accessibility. Competitive use may violate tournament rules.
-
-**Q: Which games are supported?**  
-A: Axiom AI is model-agnostic and can work with any game if you have a trained YOLO model. Default model is for Roblox.
-
-**Q: How do I train my own model?**  
-A: You'll need to create a dataset and train a YOLOv8 model. See [Ultralytics documentation](https://docs.ultralytics.com) for details.
-
-**Q: Why is detection slow on my system?**  
-A: Try reducing FOV size, increasing detection interval, or closing background applications. Ensure you meet minimum system requirements.
-
-**Q: Can I run this on Linux/Mac?**  
-A: Currently, Axiom AI is Windows-only due to Windows-specific APIs. Linux/Mac support may come in the future.
-
-**Q: How can I improve accuracy?**  
-A: Adjust confidence threshold, tune PID parameters, use a better trained model, or increase FOV size.
-
----
-
-## ⚠️ Disclaimer
-
-**This software is provided "as is" without warranty of any kind.** Use at your own risk. The developers are not responsible for:
-- Any consequences of using this software
-- Bans or penalties in online games
+- Any consequences arising from the use of this software
+- Account bans, penalties, or disciplinary actions
 - Hardware or software damage
-- Violation of terms of service
+- Violations of third-party terms of service
 
-**Users are solely responsible for ensuring their use complies with applicable laws and game terms of service.**
+You are solely responsible for ensuring that your usage complies with all applicable laws and agreements.
 
----
+## Acknowledgements
 
-## 🙏 Acknowledgments
+- **Ultralytics YOLOv8** for the detection framework
+- **ONNX Runtime** for efficient inference backends
+- **PyQt6** for the overlay and UI foundation
+- **Community contributors** for feedback, models, and testing support
 
-- **Ultralytics YOLOv8**: For the amazing object detection framework
-- **ONNX Runtime**: For optimized model inference
-- **PyQt6**: For the overlay system
-- **Community Contributors**: For bug reports, suggestions, and support
-
----
-
-**Copyright © 2025 iisHong0w0. All rights reserved.**
-
----
 ---
 
 # 中文
 
-## 🎯 項目概述
+## 目錄
+- [項目概述](#項目概述)
+- [核心功能](#核心功能)
+- [技術棧與依賴](#技術棧與依賴)
+- [系統要求](#系統要求)
+- [安裝指南](#安裝指南)
+- [快速開始](#快速開始)
+- [配置參考](#配置參考)
+- [項目結構](#項目結構)
+- [故障排除](#故障排除)
+- [貢獻指南](#貢獻指南)
+- [許可證](#許可證)
+- [社群與支持](#社群與支持)
+- [常見問題](#常見問題)
+- [免責聲明](#免責聲明)
+- [致謝](#致謝)
 
-**Axiom AI** 是一款先進的計算機視覺應用程序，專為實時對象檢測和交互而設計。基於先進的 AI 技術並針對高性能運行進行優化，Axiom AI 為最需要幫助的用戶提供智能輔助，以增強遊戲體驗。
+## 項目概述
 
-### 🌟 Axiom 適合誰使用？
+Axiom AI 是一款基於計算機視覺的覆蓋層與鼠標控制系統，可提供實時的目標檢測與瞄準輔助，專為需要輔助功能的玩家設計。透過 YOLO 對象檢測與可調式控制邏輯的結合，協助使用者在高強度的遊戲情境中維持平穩而可靠的操作。
 
-Axiom 專為相比普通玩家處於劣勢的遊戲玩家設計，包括但不限於：
-- **身體殘疾**的玩家（手部顫抖、帕金森病、神經系統疾病、癱瘓）
-- **視覺障礙**的玩家（色盲、視力不佳、眼球震顫、失明玩家）
-- **認知挑戰**的玩家（ADHD、自閉症、焦慮症、空間感知障礙）
-- **醫療狀況**的玩家（慢性疲勞綜合症、腦損傷後遺症、睡眠不足）
-- **硬件限制**的玩家（FPS 性能差、低質量外設、雲遊戲）
-- **環境限制**的玩家（無空調、鼠標空間有限、人體工學不佳）
-- 想要學習和提高的**新手**和未經訓練的玩家
-- 因失去親人而悲傷或遇到情緒挑戰的玩家
+**適合以下族群使用：**
 
-**⚠️ 重要提示**：本軟件採用 PolyForm 非商業許可證 1.0.0。**嚴禁商業使用。**
+- 具有手部顫抖、帕金森氏症、癱瘓等身體障礙的玩家
+- 經歷色盲、弱視、眼球震顫等視覺障礙的玩家
+- 面對 ADHD、自閉症、焦慮、空間感知障礙等認知挑戰的玩家
+- 長期處於慢性疲勞或其他醫療狀況的玩家
+- 受限於低階硬體、週邊設備或雲端延遲的玩家
+- 在狹小空間或不佳的人體工學環境下遊玩的玩家
+- 想要學習瞄準技巧的新手或重返遊戲的玩家
 
----
+> ⚠️ **重要提醒：** 本項目採用 PolyForm 非商業許可證 1.0.0，嚴禁任何形式的商業使用。
 
-## ✨ 主要功能
+## 核心功能
 
-### 🤖 AI 驅動檢測
-- **基於 YOLO 的對象檢測**，支持 ONNX 和 PyTorch (.pt) 模型
-- **實時推理**，支持 DirectML 加速
-- **可自定義置信度閾值**以提高檢測準確度
-- **單目標模式**專注於最近的敵人
+### AI 輔助檢測
+- Ultralytics YOLOv8 檢測流程，支援 ONNX（`.onnx`）與 PyTorch（`.pt`）模型
+- 透過 ONNX Runtime（DirectML）或 PyTorch CPU 後端進行實時推理
+- 可調式置信度門檻、檢測區域與視野（FOV）半徑
+- 單目標模式可優先鎖定最近的敵人
 
-### 🎯 智能瞄準系統
-- **PID 控制器**實現平滑準確的鼠標移動
-- **獨立 X/Y 軸調整**實現精確控制
-- **多種瞄準模式**：頭部、身體或兩者
-- **FOV（視野）系統**帶鼠標跟踪
-- 基於屏幕中心的**可調整檢測區域**
+### 智能瞄準控制
+- 可調式 PID 控制器，提供平滑且可預期的滑鼠移動
+- X/Y 軸獨立的比例、積分、微分參數，便於精細調整
+- 多種瞄準模式（頭部、身體、混合）與自訂瞄準/切換熱鍵
+- 同時支援 Windows API 與硬體層級的滑鼠輸入方法
 
-### 🖱️ 高級鼠標控制
-- **多種鼠標移動方法**：`mouse_event`、`ddxoft`
-- **多種鼠標點擊方法**以實現兼容性
-- **自動射擊功能**，可配置延遲和間隔
-- 所有操作的**可自定義熱鍵**
+### 視覺回饋與使用體驗
+- PyQt6 覆蓋層顯示檢測框、置信度與 FOV 指示
+- 即時狀態面板呈現 FPS、延遲與偵測統計
+- 可自訂不同瞄準區域與介面元素的顏色
 
-### 🎨 視覺反饋
-- **基於 PyQt6 的覆蓋層**顯示檢測框
-- **FOV 指示器**提供視覺參考
-- 檢測對象的**置信度分數顯示**
-- 帶 FPS 和檢測信息的**實時狀態面板**
-- 不同瞄準部位的**彩色目標標記**
+### 性能與穩定性
+- CPU 親和性、行程/執行緒優先權與檢測間隔皆可調節
+- 最佳化的 ONNX 運行時設定，降低推理延遲
+- 性能模式可在反應速度與資源使用間取得平衡
 
-### ⚡ 性能優化
-- **CPU 優化**，可調整進程/線程優先級
-- **多核支持**，帶 CPU 親和性設置
-- **優化的 ONNX 運行時**配置
-- **最小延遲**檢測管道
-- **性能模式**實現最大響應速度
+### 便利性功能
+- 自動射擊，可自訂延遲、間隔與目標偏好
+- 目標偵測聲響提示，可調整頻率與持續時間
+- 持續偵測模式、模型預設、多語系介面（English / 中文）等
 
-### 🔊 附加功能
-- 檢測到目標時的**聲音警報**
-- **持續檢測模式**用於連續操作
-- **可配置的檢測間隔**
-- **自動 Windows 縮放檢測**
-- **多語言支持**（English、中文）
+## 技術棧與依賴
 
----
+- **程式語言：** Python 3.11+
+- **GUI 與覆蓋層：** PyQt6
+- **計算機視覺：** Ultralytics YOLOv8、OpenCV、ONNX Runtime（DirectML）、PyTorch（CPU）
+- **畫面擷取：** MSS
+- **數值計算：** NumPy、TorchVision、Torchaudio
+- **系統整合：** pywin32、psutil、自訂 `ddxoft.dll`
+- **打包與分發：** PyInstaller（可選）、Windows 批次啟動器
 
-## 🧠 技術棧
+完整依賴清單請參閱 [`requirements.txt`](requirements.txt)。
 
-- **編程語言**：Python 3.11+
-- **GUI 框架**：PyQt6
-- **計算機視覺**：Ultralytics YOLOv8、ONNX Runtime（DirectML）、OpenCV
-- **屏幕捕獲**：MSS（Multiple Screen Shots）
-- **數值計算**：NumPy、PyTorch（CPU）
-- **系統集成**：pywin32、psutil、自定義 `ddxoft.dll`
-- **打包與分發**：PyInstaller（可選）、Windows 批處理啟動器
+## 系統要求
 
-其他依賴項列在 [`requirements.txt`](requirements.txt) 中。
+### 最低配備
+- **作業系統：** Windows 10 64 位元
+- **Python：** 3.11+
+- **記憶體：** 16 GB
+- **顯示卡：** NVIDIA GTX 1060 / AMD RX 580 或同級
+- **儲存空間：** 500 MB 可用空間
 
----
+### 建議配備
+- **作業系統：** Windows 11 64 位元
+- **Python：** 3.11+
+- **記憶體：** 32 GB 以上
+- **顯示卡：** NVIDIA RTX 3060 或更高階
+- **儲存空間：** 1 GB 可用空間
 
-## 💻 系統要求
+## 安裝指南
 
-### 最低要求
-- **操作系統**：Windows 10（64 位）或更高版本
-- **Python**：3.11 或更高版本
-- **內存**：16GB
-- **顯卡**：GTX 1060 / RX 580 或同等級別
-- **存儲空間**：500MB 可用空間
+### 方式一：快速安裝（推薦）
 
-### 推薦配置
-- **操作系統**：Windows 11（64 位）
-- **Python**：3.11+
-- **內存**：32GB 或更高
-- **顯卡**：RTX 3060 或更好
-- **存儲空間**：1GB 可用空間
+1. 前往 [版本發布頁](https://github.com/iishong0w0/Axiom-AI/releases/latest) 下載最新 ZIP 並解壓縮。
+2. 使用隨附的 `python-3.11.0-amd64.exe` 安裝 Python 3.11，記得勾選 **Add python.exe to PATH**。
+3. 雙擊 `啟動Launcher.bat` 啟動 Axiom AI，首度執行會自動安裝所有依賴套件。
+4. 等待主視窗與覆蓋層顯示，之後啟動將沿用既有環境。
 
----
-
-## 🚀 安裝指南
-
-### 方式 1：快速安裝（推薦新手使用）
-
-1. **下載最新版本**
-   - 訪問[發布頁面](https://github.com/iishong0w0/Axiom-AI/releases/latest)
-   - 下載最新的 ZIP 文件
-
-2. **安裝 Python**
-   - 運行附帶的 `python-3.11.0-amd64.exe` 安裝程序
-   - ⚠️ **重要**：安裝過程中勾選「Add python.exe to PATH」
-   - 完成安裝向導
-
-3. **啟動 Axiom AI**
-   - 將下載的 ZIP 文件解壓到一個文件夾
-   - 雙擊 `啟動Launcher.bat` 啟動應用程序
-   - 啟動器會在首次運行時自動安裝依賴項
-
-### 方式 2：手動安裝（開發者使用）
+### 方式二：手動安裝（開發者）
 
 ```bash
-# 克隆存儲庫
+# 下載專案
 git clone https://github.com/iishong0w0/Axiom-AI.git
 cd Axiom-AI
 
-# 創建虛擬環境（推薦）
+# （可選）建立並啟用虛擬環境
 python -m venv .venv
-
-# 激活虛擬環境
-# Windows:
+# Windows
 .venv\Scripts\activate
-# Linux/Mac:
+# Linux / macOS
 source .venv/bin/activate
 
-# 安裝依賴項
+# 安裝依賴
 pip install -r requirements.txt
 
-# 進入 src 目錄並運行
+# 啟動應用程式
 cd src
 python main.py
 ```
 
-### 驗證安裝
+### 成功驗證
 
-安裝後，您應該看到：
-- ✅ 帶控制面板的主 GUI 窗口
-- ✅ 顯示 FPS 和檢測信息的狀態面板
-- ✅ 控制台中沒有錯誤消息
+完成安裝後應看到：
 
-如果遇到問題，請參閱[故障排除](#故障排除)部分。
+- ✅ 主控制面板視窗
+- ✅ 覆蓋層顯示 FOV、檢測框與置信度
+- ✅ 狀態面板呈現 FPS 與偵測資訊
 
----
+若終端機出現錯誤訊息，請參考下方的[故障排除](#故障排除)章節。
 
-## 🎮 快速開始指南
+## 快速開始
 
-### 基本使用
+1. **啟動程式：** 在 `src` 目錄執行 `python main.py`。
+2. **選擇模型：** 在設定面板挑選 `.onnx` 或 `.pt` 模型；自訂模型請放入 `src/模型/`（預設為 `Roblox.onnx`）。
+3. **調整偵測參數：** 根據遊戲情境調整 FOV 大小、置信度、瞄準部位與單目標模式。
+4. **設定熱鍵：** 自訂瞄準、切換與自動射擊按鍵，預設切換鍵為 `Insert`。
+5. **啟動偵測：** 按下 `Insert` 啟用 AI 偵測，按住設定的瞄準鍵即可啟動 PID 驅動的滑鼠移動。
+6. **確認視覺回饋：** 確認覆蓋層是否正確顯示檢測框、置信度與狀態資訊。
 
-1. **啟動應用程序**
-   ```bash
-   # 從 src 目錄
-   python main.py
-   ```
+### 進階建議
 
-2. **初始設置**
-   - 應用程序會自動檢測您的屏幕分辨率
-   - 將出現帶有默認配置的設置 GUI
-   - 覆蓋層將開始顯示 FOV 和檢測框
+- 微調 `Kp`、`Ki`、`Kd` 時請以 ±0.02 為單位逐步調整，兼顧反應與平滑度。
+- 降低偵測間隔（如 `0.01 → 0.005`）可加快反應；提高值則能減少 CPU 負載。
+- 視遊戲需求切換 `mouse_event` 與 `ddxoft` 滑鼠輸入模式。
+- 若遇到延遲，可提高行程/執行緒優先權開啟性能模式。
 
-3. **配置您的模型**
-   - 點擊設置面板中的模型下拉菜單
-   - 從 `模型` 文件夾中選擇您想要的 AI 模型（`.onnx` 或 `.pt` 文件）
-   - 默認模型：`Roblox.onnx`（640x640 輸入大小）
+## 配置參考
 
-4. **調整檢測設置**
-   - **FOV 大小**：調整視野範圍（默認：222px）
-   - **置信度閾值**：設置最小檢測置信度（默認：0.11）
-   - **瞄準部位**：選擇目標區域（頭部/身體/兩者）
-   - **單目標模式**：啟用以僅跟踪最近的敵人
+所有設定皆會儲存在 `src/config.json`，亦可於 GUI 即時調整。
 
-5. **配置熱鍵**
-   - **瞄準鍵**：激活瞄準的鼠標按鈕（默認：左鍵、右鍵、X2 按鈕）
-   - **切換鍵**：按 `Insert` 啟用/禁用系統
-   - **自動射擊鍵**：配置自動射擊（默認：X2 按鈕）
-
-6. **開始檢測**
-   - 按 `Insert` 切換 AI 檢測開/關
-   - 按住其中一個配置的瞄準鍵以激活目標定位
-   - 將出現顯示檢測到的對象和 FOV 的視覺反饋
-
-### 高級配置
-
-#### PID 控制器調整
-
-微調鼠標移動平滑度：
-
-```
-Kp（比例）：控制響應速度（默認：0.26）
-Ki（積分）：修正穩態誤差（默認：0.0）
-Kd（微分）：減少過衝和振盪（默認：0.0）
-```
-
-- **更高的 Kp**：更快的響應，可能導致過衝
-- **更高的 Ki**：更好的精度，可能導致不穩定
-- **更高的 Kd**：更平滑的移動，可能降低響應速度
-
-#### 性能優化
-
-啟用高性能模式：
-- 將**進程優先級**設置為「High」或「Realtime」
-- 將**線程優先級**設置為「High」
-- 啟用 **CPU 優化**
-- 減少**檢測間隔**（最小值：1ms）
-
-#### 鼠標控制方法
-
-- **mouse_event**：標準 Windows API（兼容大多數遊戲）
-- **ddxoft**：硬件級鼠標驅動（需要管理員權限）
-
----
-
-## ⚙️ 配置參考
-
-### 主配置文件：`config.json`
-
-應用程序將所有設置保存到 `src/config.json`。以下是關鍵參數：
-
-```json
+```jsonc
 {
-  "fov_size": 222,                    // 視野大小（像素）
-  "min_confidence": 0.11,             // 最小檢測置信度（0.0-1.0）
-  "aim_part": "head",                 // 目標部位："head"、"body"、"both"
-  "single_target_mode": true,         // 僅跟踪最近的目標
-  "keep_detecting": true,             // 始終檢測（即使不瞄準時）
-  "fov_follow_mouse": true,           // FOV 跟隨鼠標光標
-  
-  // PID 控制器（X 軸）
+  "fov_size": 222,                    // 視野半徑（像素）
+  "min_confidence": 0.11,             // 最低置信度
+  "aim_part": "head",                // 瞄準部位：head / body / both
+  "single_target_mode": true,         // 是否鎖定最近目標
+  "keep_detecting": true,             // 是否持續偵測
+  "fov_follow_mouse": true,           // FOV 是否跟隨滑鼠
   "pid_kp_x": 0.26,
   "pid_ki_x": 0.0,
   "pid_kd_x": 0.0,
-  
-  // PID 控制器（Y 軸）
   "pid_kp_y": 0.26,
   "pid_ki_y": 0.0,
   "pid_kd_y": 0.0,
-  
-  // 熱鍵（虛擬鍵代碼）
-  "AimKeys": [1, 6, 2],               // 0x01=左鍵, 0x06=X2, 0x02=右鍵
-  "aim_toggle_key": 45,               // Insert 鍵
-  "auto_fire_key": 6,                 // X2 按鈕
-  "auto_fire_key2": 4,                // 中鍵
-  
-  // 自動射擊設置
-  "auto_fire_delay": 0.0,             // 射擊前延遲（秒）
-  "auto_fire_interval": 0.08,         // 射擊間隔（秒）
-  "auto_fire_target_part": "both",    // 自動射擊目標偏好
-  
-  // 性能設置
-  "detect_interval": 0.01,            // 檢測循環延遲（秒）
-  "cpu_optimization": true,           // 啟用 CPU 優化
-  "process_priority": "high",         // "normal"、"high"、"realtime"
-  "thread_priority": "high",          // 線程優先級
-  
-  // 聲音警報
-  "enable_sound_alert": false,        // 檢測到目標時啟用蜂鳴聲
-  "sound_frequency": 1000,            // 蜂鳴頻率（Hz）
-  "sound_duration": 100,              // 蜂鳴持續時間（ms）
-  "sound_interval": 200,              // 蜂鳴之間的最小時間（ms）
-  
-  // 視覺設置
-  "show_fov": true,                   // 顯示 FOV 圓圈
-  "show_boxes": true,                 // 顯示檢測框
-  "show_confidence": true,            // 顯示置信度分數
-  "show_status_panel": true,          // 顯示狀態覆蓋層
-  
-  // 目標區域比例
-  "head_width_ratio": 0.38,           // 頭部區域寬度（0.0-1.0）
-  "head_height_ratio": 0.26,          // 頭部區域高度（0.0-1.0）
-  "body_width_ratio": 0.87,           // 身體區域寬度（0.0-1.0）
-  
-  // 鼠標控制
-  "mouse_move_method": "mouse_event", // "mouse_event" 或 "ddxoft"
-  "mouse_click_method": "ddxoft"      // 鼠標點擊方法
+  "AimKeys": [1, 6, 2],               // 瞄準鍵（虛擬鍵碼）
+  "aim_toggle_key": 45,               // 切換鍵（Insert）
+  "auto_fire_interval": 0.08,         // 自動射擊間隔（秒）
+  "auto_fire_target_part": "both",   // 自動射擊偏好
+  "detect_interval": 0.01,            // 偵測迴圈延遲（秒）
+  "cpu_optimization": true,
+  "process_priority": "high",
+  "thread_priority": "high",
+  "mouse_move_method": "mouse_event",
+  "mouse_click_method": "ddxoft",
+  "enable_sound_alert": false,
+  "show_status_panel": true
 }
 ```
 
+### 主要選項
+
+| 選項 | 說明 | 預設值 |
+| --- | --- | --- |
+| `fov_size` | 視野半徑（像素） | `222` |
+| `min_confidence` | 判定命中的最低置信度 | `0.11` |
+| `aim_part` | 瞄準部位（`head` / `body` / `both`） | `head` |
+| `AimKeys` | 觸發瞄準的滑鼠按鍵 | `[1, 6, 2]` |
+| `auto_fire_interval` | 自動射擊間隔（秒） | `0.08` |
+| `detect_interval` | 偵測迴圈延遲（秒） | `0.01` |
+| `mouse_move_method` | 滑鼠移動方式（`mouse_event` / `ddxoft`） | `mouse_event` |
+| `show_status_panel` | 是否顯示 FPS / 狀態面板 | `true` |
+
 ### 環境變量
 
-不需要環境變量。所有配置都通過 `config.json` 和設置 GUI 完成。
+本項目無需額外的環境變量，所有參數皆可透過 `config.json` 或介面設定完成。
 
----
-
-## 📁 項目結構
+## 項目結構
 
 ```
 Axiom-AI_Aimbot/
-├── src/                          # 源代碼目錄
-│   ├── main.py                   # 主應用程序入口
-│   ├── config.py                 # 配置類和管理
-│   ├── config.json               # 用戶設置文件
-│   ├── inference.py              # AI 推理和預處理
-│   ├── win_utils.py              # Windows API 工具
-│   ├── overlay.py                # PyQt6 視覺反饋覆蓋層
-│   ├── settings_gui.py           # 設置 GUI 界面
-│   ├── status_panel.py           # 狀態面板覆蓋層
-│   ├── about.py                  # 關於對話框
-│   ├── preset_manager.py         # 配置預設管理器
-│   ├── config_manager.py         # 高級配置管理
-│   ├── language_manager.py       # 多語言支持
-│   ├── language_data.py          # 語言字符串數據庫
-│   ├── scaling_warning_dialog.py # Windows 縮放檢測
-│   ├── ddxoft.dll                # 硬件鼠標驅動庫
-│   ├── logo.ico                  # 應用程序圖標
-│   └── 模型/                     # AI 模型目錄
-│       └── *.onnx, *.pt          # YOLO 模型
-├── requirements.txt              # Python 依賴項
-├── LICENSE                       # PolyForm 非商業許可證
-├── README.md                     # 本文件
-├── 啟動Launcher.bat              # Windows 啟動腳本
-├── 常見問題FAQ.txt               # 常見問題解答
-├── 面板.png                      # 文檔截圖
-├── python-3.11.0-amd64.exe       # Python 安裝程序（捆綁）
-└── index.html                    # Web 界面（可選）
+├── src/
+│   ├── main.py
+│   ├── config.py
+│   ├── config.json
+│   ├── inference.py
+│   ├── overlay.py
+│   ├── settings_gui.py
+│   ├── status_panel.py
+│   ├── config_manager.py
+│   ├── preset_manager.py
+│   ├── language_manager.py
+│   ├── language_data.py
+│   ├── scaling_warning_dialog.py
+│   ├── win_utils.py
+│   ├── ddxoft.dll
+│   └── 模型/
+│       └── *.onnx, *.pt
+├── requirements.txt
+├── LICENSE
+├── README.md
+├── 啟動Launcher.bat
+├── 常見問題FAQ.txt
+├── 面板.png
+├── python-3.11.0-amd64.exe
+└── index.html
 ```
 
----
+## 故障排除
 
-## 🛠️ 故障排除
+#### 程式無法啟動
+- 確認已安裝並將 Python 3.11+ 加入 PATH。
+- 以終端機執行 `cd src && python main.py` 以取得錯誤訊息。
+- 重新安裝 Python，確保啟動器可建立環境。
 
-### 常見問題和解決方案
+#### 出現 ModuleNotFoundError
+- 執行 `pip install -r requirements.txt --upgrade` 重新安裝依賴。
+- 若使用虛擬環境，請先啟用後再啟動程式。
 
-#### ❌ 應用程序無法啟動
+#### 沒有偵測或 FPS 過低
+- 確認 `src/模型/` 內存在模型檔案。
+- 減少 FOV 或提高偵測間隔來調整效能。
+- 關閉耗資源程式並更新顯示卡驅動。
 
-**問題**：雙擊啟動器沒有反應或顯示錯誤。
+#### 滑鼠沒有移動
+- 檢查瞄準鍵是否與設定一致。
+- 在 `mouse_event` 與 `ddxoft` 之間切換以符合遊戲需求。
+- 以系統管理員身分執行程式，避免權限受限。
+- 提高 `pid_kp_x` / `pid_kp_y` 增強修正力度。
 
-**解決方案**：
-1. 確保已安裝 Python 3.11+
-2. 驗證安裝期間勾選了「Add python.exe to PATH」
-3. 使用正確選項重新安裝 Python
-4. 嘗試從命令行運行：`cd src && python main.py`
+#### 覆蓋層未顯示
+- 確認設定中 `show_fov` 與 `show_boxes` 為啟用狀態。
+- 使用視窗或無邊框模式，並透過 Alt+Tab 重繪覆蓋層。
+- 停用 Windows Game Bar 等其他覆蓋層。
 
-#### ❌ ModuleNotFoundError
+#### 存取遭拒或權限錯誤
+- 以系統管理員權限執行啟動器或 `main.py`。
+- 確認防毒或反外掛軟體未封鎖 `ddxoft.dll`。
 
-**問題**：缺少 Python 包錯誤。
+#### CPU 使用率過高
+- 將 `detect_interval` 提高至 `0.03` 等較大數值。
+- 減少 FOV 或停用 `keep_detecting`。
+- 若無需即時監控，可關閉狀態面板。
 
-**解決方案**：
-```bash
-# 重新安裝所有依賴項
-pip install -r requirements.txt --upgrade
-```
+## 貢獻指南
 
-#### ❌ 無檢測 / 低 FPS
-
-**問題**：AI 檢測不工作或非常慢。
-
-**解決方案**：
-1. 檢查模型文件是否存在於 `src/模型/` 目錄中
-2. 降低 FOV 大小以獲得更好的性能
-3. 增加 `detect_interval`（例如 0.02 或 0.03）
-4. 關閉其他資源密集型應用程序
-5. 確保 GPU 驅動程序是最新的
-6. 嘗試切換到更小的模型文件
-
-#### ❌ 鼠標不移動
-
-**問題**：檢測有效但鼠標不移動。
-
-**解決方案**：
-1. 檢查瞄準鍵是否正確配置
-2. 驗證反作弊軟件是否阻止輸入
-3. 嘗試將 `mouse_move_method` 切換為「ddxoft」
-4. 以管理員身份運行應用程序（某些遊戲需要）
-5. 增加 PID Kp 值以實現更激進的移動
-
-#### ❌ 訪問被拒絕 / 權限錯誤
-
-**問題**：應用程序需要管理員權限。
-
-**解決方案**：
-- 右鍵單擊啟動器或 `main.py` 並選擇「以管理員身份運行」
-- 某些鼠標控制方法需要提升的權限
-
-#### ❌ 覆蓋層不可見
-
-**問題**：FOV 和框不顯示。
-
-**解決方案**：
-1. 檢查 `show_fov` 和 `show_boxes` 設置
-2. 確保遊戲處於窗口或無邊框模式（不是全屏）
-3. 嘗試 Alt+Tab 刷新覆蓋層
-4. 禁用 Windows Game Bar 和覆蓋層
-
-#### ❌ CPU 使用率高
-
-**問題**：應用程序使用過多 CPU。
-
-**解決方案**：
-1. 增加 `detect_interval`（默認：0.01 → 0.03）
-2. 減小 FOV 大小
-3. 禁用 `keep_detecting` 模式
-4. 關閉狀態面板（設置 `show_status_panel: false`）
-
----
-
-## 🤝 貢獻
-
-我們歡迎貢獻以改進 Axiom AI！以下是您可以幫助的方式：
-
-### 開發設置
+歡迎任何形式的貢獻！建議流程如下：
 
 ```bash
-# Fork 並克隆存儲庫
+# Fork 並克隆你的儲存庫
 git clone https://github.com/YOUR_USERNAME/Axiom-AI.git
 cd Axiom-AI
 
-# 為您的功能創建分支
+# 建立功能分支
 git checkout -b feature/your-feature-name
 
-# 安裝開發依賴項
+# 安裝依賴並進行修改
 pip install -r requirements.txt
-
-# 進行更改並徹底測試
 
 # 提交並推送
 git add .
-git commit -m "Add: your feature description"
+git commit -m "feat: 描述你的變更"
 git push origin feature/your-feature-name
 ```
 
-### 貢獻指南
+**開發建議**
+- 遵循現有 Python 風格（PEP 8）與專案結構。
+- 新功能請同步更新文件與多語系字串。
+- 盡可能在不同 Windows 版本與硬體上測試。
+- 所有改動必須符合 PolyForm 非商業許可證的要求。
 
-- **代碼風格**：遵循現有的 Python 約定（PEP 8）
-- **文檔**：添加新功能時更新 README
-- **測試**：在多個 Windows 版本和硬件上測試
-- **語言**：在 UI 元素中支持英語和中文
-- **性能**：確保更改不會對 FPS 產生負面影響
-- **許可證**：所有貢獻必須符合 PolyForm 非商業許可證
+## 許可證
 
-### 貢獻領域
+本專案採用 **PolyForm 非商業許可證 1.0.0**。您可以在個人、教育或研究領域中修改與分享本軟體，但 **禁止任何商業用途**。詳情請參閱 [LICENSE](LICENSE) 或前往 [PolyForm 官方網站](https://polyformproject.org/licenses/noncommercial/1.0.0/)。
 
-- 🐛 錯誤修復和穩定性改進
-- ⚡ 性能優化
-- 🎨 UI/UX 增強
-- 📚 文檔和教程
-- 🌐 翻譯成其他語言
-- 🤖 新的 AI 模型和訓練數據
-- 🎮 遊戲特定配置文件和預設
+## 社群與支持
 
----
+- **Discord：** [加入社群](https://discord.gg/h4dEh3b8Bt)
+- **GitHub Issues：** [回報問題或提案新功能](https://github.com/iishong0w0/Axiom-AI/issues)
+- **電子郵件：** [iis20160512@gmail.com](mailto:iis20160512@gmail.com)
 
-## 📄 許可證
+## 常見問題
 
-本項目採用 **PolyForm 非商業許可證 1.0.0**。
+**這是不是外掛？**  
+Axiom AI 定位為輔助工具，請在符合遊戲規範的前提下負責使用。
 
-### 主要限制：
+**會被封鎖帳號嗎？**  
+無法保證所有線上遊戲的安全性，請自行評估風險。
 
-- ❌ **禁止商業使用**：本軟件不能用於任何商業目的
-- ❌ **禁止銷售**：不能銷售或對使用它的軟件或服務收費
-- ❌ **禁止商業活動**：不能用於與任何商業活動相關的用途
-- ✅ **個人使用**：免費用於個人、教育和研究目的
-- ✅ **修改**：您可以修改和分發軟件
-- ✅ **署名**：必須包含原始許可證和版權聲明
+**可以用在競技賽事上嗎？**  
+競技或錦標賽通常禁止外部輔助工具，使用前務必了解相關規定。
 
-### 什麼算作商業使用？
+**支援哪些遊戲？**  
+Axiom AI 與模型無綁定，可搭配任何訓練完成的 YOLO 模型（預設模型支援 Roblox）。
 
-- 使用軟件提供付費服務
-- 將軟件作為商業產品的一部分使用
-- 使用軟件產生收入（直接或間接）
-- 在任何業務中使用軟件，即使您不收費
+**如何訓練自己的模型？**  
+自行蒐集資料集並依照 [Ultralytics 說明文件](https://docs.ultralytics.com) 訓練 YOLOv8 模型即可。
 
-### 允許什麼？
+**偵測速度很慢怎麼辦？**  
+可減少 FOV、提高偵測間隔、關閉背景程式或改用更輕量的模型。
 
-- 個人遊戲和娛樂
-- 教育目的和學習
-- 研究和開發
-- 與朋友分享（非商業）
+## 免責聲明
 
-有關完整的許可證詳細信息，請參閱 [LICENSE](LICENSE) 或訪問 [PolyForm 非商業許可證](https://polyformproject.org/licenses/noncommercial/1.0.0/)。
+本軟體以「現狀」提供，不保證任何功能或安全性。開發者不對以下情況負責：
 
----
+- 使用本軟體所導致的任何結果
+- 線上遊戲中的帳號封鎖或處罰
+- 硬體或軟體損壞
+- 違反第三方服務條款
 
-## 📞 聯繫與支持
+使用者需自行確保其使用行為符合相關法律與服務協議。
 
-### 支持渠道
+## 致謝
 
-- **Discord 服務器**：[加入我們的社區](https://discord.gg/h4dEh3b8Bt) - 用於一般支持、討論和社區幫助
-- **GitHub Issues**：[報告錯誤](https://github.com/iishong0w0/Axiom-AI/issues) - 用於錯誤報告和功能請求
-- **電子郵件**：[iis20160512@gmail.com](mailto:iis20160512@gmail.com) - 用於與開發者直接溝通
-
-### 鏈接
-
-- **GitHub**：[@iishong0w0](https://github.com/iishong0w0)
-- **存儲庫**：[Axiom-AI](https://github.com/iishong0w0/Axiom-AI)
-- **發布**：[最新版本](https://github.com/iishong0w0/Axiom-AI/releases/latest)
-
----
-
-## 📝 常見問題解答（FAQ）
-
-**問：這是作弊/外掛嗎？**  
-答：Axiom AI 是一款旨在幫助殘疾玩家的輔助工具。請負責任地使用並遵守遊戲服務條款。
-
-**問：使用這個會被封號嗎？**  
-答：我們無法保證在任何在線遊戲中的安全性。使用風險自負並遵守遊戲規則。
-
-**問：我可以在競技比賽中使用嗎？**  
-答：此工具旨在用於休閒遊戲和輔助功能。競技使用可能違反錦標賽規則。
-
-**問：支持哪些遊戲？**  
-答：Axiom AI 與模型無關，如果您有訓練好的 YOLO 模型，可以與任何遊戲配合使用。默認模型適用於 Roblox。
-
-**問：如何訓練自己的模型？**  
-答：您需要創建數據集並訓練 YOLOv8 模型。詳情請參閱 [Ultralytics 文檔](https://docs.ultralytics.com)。
-
-**問：為什麼我的系統檢測速度慢？**  
-答：嘗試減小 FOV 大小、增加檢測間隔或關閉後台應用程序。確保您滿足最低系統要求。
-
-**問：可以在 Linux/Mac 上運行嗎？**  
-答：目前，Axiom AI 僅支持 Windows，因為使用了 Windows 特定的 API。未來可能會支持 Linux/Mac。
-
-**問：如何提高準確度？**  
-答：調整置信度閾值、調整 PID 參數、使用更好訓練的模型或增加 FOV 大小。
-
----
-
-## ⚠️ 免責聲明
-
-**本軟件按「原樣」提供，不提供任何形式的保證。** 使用風險自負。開發者不對以下內容負責：
-- 使用本軟件的任何後果
-- 在線遊戲中的封號或處罰
-- 硬件或軟件損壞
-- 違反服務條款
-
-**用戶有全部責任確保其使用符合適用法律和遊戲服務條款。**
-
----
-
-## 🙏 致謝
-
-- **Ultralytics YOLOv8**：提供出色的對象檢測框架
-- **ONNX Runtime**：提供優化的模型推理
-- **PyQt6**：提供覆蓋層系統
-- **社區貢獻者**：提供錯誤報告、建議和支持
-
----
-
-**版權所有 © 2025 iisHong0w0。保留所有權利。**
+- **Ultralytics YOLOv8**：提供卓越的對象檢測框架
+- **ONNX Runtime**：帶來高效率的推理後端
+- **PyQt6**：構築覆蓋層與使用者介面
+- **社群貢獻者**：提供模型、測試與寶貴回饋
