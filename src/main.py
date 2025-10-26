@@ -14,6 +14,40 @@ import os
 import psutil
 from typing import Optional
 
+# When bundled with PyInstaller, ensure native dependencies are discoverable.
+_DLL_DIR_HANDLES = []
+if sys.platform == "win32":
+    def _maybe_add_dll_dir(path: str):
+        if not path:
+            return
+        try:
+            handle = os.add_dll_directory(path)
+            _DLL_DIR_HANDLES.append(handle)
+        except AttributeError:
+            os.environ["PATH"] = f"{path};{os.environ.get('PATH', '')}"
+        except (FileNotFoundError, NotADirectoryError):
+            pass
+
+    if getattr(sys, "frozen", False):
+        base_dir = getattr(sys, '_MEIPASS', '')
+        search_roots = [
+            base_dir,
+            os.path.join(base_dir, 'onnxruntime'),
+            os.path.join(base_dir, 'onnxruntime', 'capi'),
+        ]
+        for candidate in search_roots:
+            if candidate and os.path.isdir(candidate):
+                _maybe_add_dll_dir(candidate)
+
+        exe_dir = os.path.dirname(sys.executable)
+        fallback_dirs = [
+            os.path.join(exe_dir, 'onnxruntime'),
+            os.path.join(exe_dir, 'onnxruntime', 'capi'),
+        ]
+        for candidate in fallback_dirs:
+            if os.path.isdir(candidate):
+                _maybe_add_dll_dir(candidate)
+
 # 根據模型類型導入不同函式庫
 import onnxruntime as ort
 import torch
@@ -21,7 +55,7 @@ from ultralytics import YOLO
 
 # 從我們自己建立的模組中導入
 from config import Config, load_config
-from win_utils import send_mouse_move, send_mouse_click, is_key_pressed, check_and_request_admin, test_ddxoft_functions, get_ddxoft_statistics
+from win_utils import send_mouse_move, send_mouse_click, is_key_pressed, check_and_request_admin, test_ddxoft_functions, get_ddxoft_statistics, ensure_ddxoft_ready
 from inference import preprocess_image, postprocess_outputs, non_max_suppression, PIDController
 from overlay import start_pyqt_overlay, PyQtOverlay
 from settings_gui import create_settings_gui
@@ -107,14 +141,17 @@ def optimize_onnx_session(config):
         session_options.intra_op_num_threads = psutil.cpu_count()
         session_options.inter_op_num_threads = psutil.cpu_count()
         
-        # 啟用並行執行
-        session_options.execution_mode = ort.ExecutionMode.ORT_PARALLEL
+        # 設置執行模式為順序（對單個請求更快）
+        session_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
         
         # 啟用記憶體優化
         session_options.enable_mem_pattern = True
         session_options.enable_cpu_mem_arena = True
         
-        print(f"[性能優化] ONNX使用 {psutil.cpu_count()} 個CPU核心")
+        # 啟用 profiling（可選，用於調試）
+        # session_options.enable_profiling = True
+        
+        print(f"[性能優化] ONNX使用 {psutil.cpu_count()} 個CPU核心，順序執行模式")
         return session_options
         
     except Exception as e:
@@ -133,10 +170,11 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
     
     screen_capture = mss.mss()
     
-    # 移除 CUDA 支援，PyTorch 模型只使用 CPU
+    # Run PyTorch models on CPU
     if model_type == 'pt':
-        print(f"PyTorch 模型將在 CPU 上運行。")
-        model.to('cpu')
+        torch_device = getattr(config, 'torch_device', 'cpu')
+        model.to(torch_device)
+        config.current_provider = 'CPU'
 
     input_name = None
     if model_type == 'onnx':
@@ -145,7 +183,7 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
     pid_x = PIDController(config.pid_kp_x, config.pid_ki_x, config.pid_kd_x)
     pid_y = PIDController(config.pid_kp_y, config.pid_ki_y, config.pid_kd_y)
 
-    # 優化：緩存配置項，減少屬性訪問
+    # 真正的配置緩存：避免每次循環都訪問 config 屬性
     last_pid_update = 0
     pid_check_interval = 1.0  # 每秒檢查一次PID參數變化
     
@@ -155,37 +193,41 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
     
     # 音效提示相關變數
     last_sound_time = 0
-    sound_playing = False
     
-    # 優化：預計算常用值
+    # 預計算常用值（真正減少重複計算）
     half_width = config.width // 2
     half_height = config.height // 2
+    
+    # 緩存滑鼠移動方式，避免每次循環都 getattr
+    cached_mouse_move_method = getattr(config, 'mouse_move_method', 'mouse_event')
+    last_method_check_time = 0
+    method_check_interval = 2.0  # 每2秒檢查一次方法變更
 
     while config.Running:
         current_time = time.time()
         
-        # 優化：降低PID參數檢查頻率
+        # 真正的緩存：定期更新 PID 和方法配置
         if current_time - last_pid_update > pid_check_interval:
             pid_x.Kp, pid_x.Ki, pid_x.Kd = config.pid_kp_x, config.pid_ki_x, config.pid_kd_x
             pid_y.Kp, pid_y.Ki, pid_y.Kd = config.pid_kp_y, config.pid_ki_y, config.pid_kd_y
             last_pid_update = current_time
-            
-            # 檢查滑鼠移動方式是否有變更
-            if not hasattr(config, '_last_mouse_move_method'):
-                config._last_mouse_move_method = getattr(config, 'mouse_move_method', 'mouse_event')
-            elif config._last_mouse_move_method != getattr(config, 'mouse_move_method', 'mouse_event'):
-                config._last_mouse_move_method = getattr(config, 'mouse_move_method', 'mouse_event')
-                print(f"[配置更新] 滑鼠移動方式已更新為: {config._last_mouse_move_method}")
         
-        # ddxoft 統計顯示
-        current_method = getattr(config, 'mouse_move_method', 'mouse_event')
-        if current_method == 'ddxoft' and current_time - last_ddxoft_stats_time > ddxoft_stats_interval:
+        # 檢查滑鼠移動方式變更（使用緩存）
+        if current_time - last_method_check_time > method_check_interval:
+            new_method = getattr(config, 'mouse_move_method', 'mouse_event')
+            if new_method != cached_mouse_move_method:
+                cached_mouse_move_method = new_method
+                print(f"[配置更新] 滑鼠移動方式已更新為: {cached_mouse_move_method}")
+            last_method_check_time = current_time
+        
+        # ddxoft 統計顯示（使用緩存的方法）
+        if cached_mouse_move_method == 'ddxoft' and current_time - last_ddxoft_stats_time > ddxoft_stats_interval:
             stats = get_ddxoft_statistics()
             if stats['total_count'] > 0:
                 print(f"[ddxoft] 運行狀態報告 - 成功: {stats['success_count']}, 失敗: {stats['failure_count']}, 成功率: {stats['success_rate']:.1f}%")
             last_ddxoft_stats_time = current_time
         
-        # 優化：緩存十字準心位置計算
+        # 更新十字準心位置
         if config.fov_follow_mouse:
             try:
                 x, y = win32api.GetCursorPos()
@@ -195,11 +237,11 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
         else:
             config.crosshairX, config.crosshairY = half_width, half_height
 
-        # 優化：一次性檢查所有瞄準鍵
+        # 檢查是否正在瞄準
         is_aiming = any(is_key_pressed(k) for k in config.AimKeys)
         
         if not config.AimToggle or (not config.keep_detecting and not is_aiming):
-            # 優化：批量清空隊列，避免重複操作
+            # 清空檢測隊列
             try:
                 while not boxes_queue.empty():
                     boxes_queue.get_nowait()
@@ -209,18 +251,29 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
                 pass
             boxes_queue.put([])
             confidences_queue.put([])
-            time.sleep(0.05)  # 優化：非活動時使用較長睡眠
+            time.sleep(0.05)  # 非活動時降低CPU使用率
             continue
             
         fov_size = config.fov_size
         crosshair_x, crosshair_y = config.crosshairX, config.crosshairY
-        
-        # 修改：檢測整個畫面而不是只檢測FOV區域
+
+        # 修改：檢測以FOV中心為中心，邊長為螢幕高度的正方形區域
+        detection_size = config.height  # 正方形邊長等於螢幕高度
+        half_detection_size = detection_size // 2
+
+        # 計算檢測區域的左上角座標
+        region_left = max(0, crosshair_x - half_detection_size)
+        region_top = max(0, crosshair_y - half_detection_size)
+
+        # 計算檢測區域的寬度和高度，確保不超出螢幕邊界
+        region_width = min(detection_size, config.width - region_left)
+        region_height = min(detection_size, config.height - region_top)
+
         region = {
-            "left": 0,
-            "top": 0,
-            "width": config.width, 
-            "height": config.height,
+            "left": region_left,
+            "top": region_top,
+            "width": region_width,
+            "height": region_height,
         }
 
         try:
@@ -230,14 +283,14 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
         if game_frame.size == 0: 
             continue
         
-        # 優化：只在需要時進行顏色轉換
+        # AI 模型推理
         boxes, confidences = [], []
         
         if model_type == 'onnx':
             input_tensor = preprocess_image(game_frame, config.model_input_size)
             try:
                 outputs = model.run(None, {input_name: input_tensor})
-                boxes, confidences = postprocess_outputs(outputs, region['width'], region['height'], config.model_input_size, config.min_confidence)
+                boxes, confidences = postprocess_outputs(outputs, region['width'], region['height'], config.model_input_size, config.min_confidence, region['left'], region['top'])
                 boxes, confidences = non_max_suppression(boxes, confidences)
             except Exception as e:
                 print(f"ONNX 推理錯誤: {e}")
@@ -245,20 +298,27 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
         elif model_type == 'pt':
             game_frame_rgb = cv2.cvtColor(game_frame, cv2.COLOR_BGRA2RGB)
             try:
-                results = model(game_frame_rgb, verbose=False)
+                device = getattr(config, 'torch_device', 'cpu')
+                results = model(game_frame_rgb, device=device, verbose=False)
                 high_conf_indices = results[0].boxes.conf >= config.min_confidence
-                boxes = results[0].boxes.xyxy[high_conf_indices].cpu().numpy().tolist()
+                boxes_np = results[0].boxes.xyxy[high_conf_indices].cpu().numpy()
                 confidences = results[0].boxes.conf[high_conf_indices].cpu().numpy().tolist()
+
+                # 將相對於檢測區域的座標轉換為螢幕絕對座標
+                boxes_np[:, 0] += region['left']  # x1
+                boxes_np[:, 1] += region['top']   # y1
+                boxes_np[:, 2] += region['left']  # x2
+                boxes_np[:, 3] += region['top']   # y2
+
+                boxes = boxes_np.tolist()
             except Exception as e:
                 print(f"PyTorch 推理錯誤: {e}")
                 continue
 
-        # 修改：由於檢測整個畫面，boxes已經是絕對座標，不需要轉換
+        # boxes 已經是螢幕絕對座標
         absolute_boxes = boxes[:]
         
-        # 新增：FOV過濾邏輯 - 只保留與FOV框有交集的人物框
-        # 改進：檢測整個畫面後，使用FOV框進行過濾
-        # 只要人物框與FOV框有任何重疊就會被保留（不需要完全包含）
+        # FOV過濾：只保留與FOV框有交集的人物框
         if absolute_boxes:
             fov_half = fov_size // 2
             fov_left = crosshair_x - fov_half
@@ -271,9 +331,7 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
             
             for i, box in enumerate(absolute_boxes):
                 x1, y1, x2, y2 = box
-                # 矩形交集檢測：只要人物框有一點點碰到FOV框就算
-                # 條件：人物框左邊 < FOV右邊 且 人物框右邊 > FOV左邊 且
-                #       人物框上邊 < FOV下邊 且 人物框下邊 > FOV上邊
+                # 矩形交集檢測
                 if (x1 < fov_right and x2 > fov_left and 
                     y1 < fov_bottom and y2 > fov_top):
                     filtered_boxes.append(box)
@@ -287,18 +345,20 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
         if config.single_target_mode and absolute_boxes:
             crosshair_x, crosshair_y = config.crosshairX, config.crosshairY
             closest_box = None
-            min_distance = float('inf')
+            min_distance_sq = float('inf')  # 使用距離平方，避免不必要的開方運算
             closest_confidence = 0
             
             for i, box in enumerate(absolute_boxes):
                 abs_x1, abs_y1, abs_x2, abs_y2 = box
-                # 計算邊界框中心點距離準心的距離
+                # 計算邊界框中心點到準心的距離平方
                 box_center_x = (abs_x1 + abs_x2) * 0.5
                 box_center_y = (abs_y1 + abs_y2) * 0.5
-                distance = math.sqrt((box_center_x - crosshair_x)**2 + (box_center_y - crosshair_y)**2)
+                dx = box_center_x - crosshair_x
+                dy = box_center_y - crosshair_y
+                distance_sq = dx * dx + dy * dy  # 比較時不需要開方
                 
-                if distance < min_distance:
-                    min_distance = distance
+                if distance_sq < min_distance_sq:
+                    min_distance_sq = distance_sq
                     closest_box = box
                     closest_confidence = confidences[i] if i < len(confidences) else 0.5
             
@@ -339,7 +399,7 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
                         pass  # 忽略音效播放錯誤
 
         if is_aiming and absolute_boxes:
-            # 優化：預計算瞄準參數
+            # 讀取瞄準參數
             aim_part = config.aim_part
             head_height_ratio = config.head_height_ratio
             head_width_ratio = config.head_width_ratio
@@ -351,7 +411,7 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
                 box_w, box_h = abs_x2 - abs_x1, abs_y2 - abs_y1
                 box_center_x = abs_x1 + box_w * 0.5
                 
-                # 優化：統一的瞄準部位計算
+                # 計算瞄準點
                 if aim_part == "head":
                     target_x = box_center_x
                     target_y = abs_y1 + box_h * head_height_ratio * 0.5
@@ -362,17 +422,16 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
 
                 moveX = target_x - crosshair_x
                 moveY = target_y - crosshair_y
-                distance = math.sqrt(moveX*moveX + moveY*moveY)  # 優化：避免**運算
-                valid_targets.append((distance, moveX, moveY))
+                distance_sq = moveX * moveX + moveY * moveY  # 使用距離平方進行排序
+                valid_targets.append((distance_sq, moveX, moveY))
 
             if valid_targets:
                 valid_targets.sort(key=lambda x: x[0])
                 _, errorX, errorY = valid_targets[0]
                 dx, dy = pid_x.update(errorX), pid_y.update(errorY)
                 if abs(dx) > 0 or abs(dy) > 0:
-                    # 使用配置中的滑鼠移動方式
-                    current_method = getattr(config, 'mouse_move_method', 'mouse_event')
-                    send_mouse_move(int(dx), int(dy), method=current_method)
+                    # 使用緩存的滑鼠移動方式
+                    send_mouse_move(int(dx), int(dy), method=cached_mouse_move_method)
             else:
                 pid_x.reset()
                 pid_y.reset()
@@ -380,7 +439,7 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
             pid_x.reset()
             pid_y.reset()
 
-        # 優化：改善隊列管理，避免重複檢查
+        # 更新檢測結果隊列
         try:
             if boxes_queue.full():
                 boxes_queue.get_nowait()
@@ -392,17 +451,11 @@ def ai_logic_loop(config, model, model_type, boxes_queue, confidences_queue):
         boxes_queue.put(absolute_boxes)
         confidences_queue.put(confidences)
 
-        # 優化：使用配置的檢測間隔，確保一致性
-        # 在性能模式下進一步優化睡眠時間
-        if getattr(config, 'performance_mode', False):
-            # 極短睡眠時間以最大化CPU使用率
-            sleep_time = max(config.detect_interval, 0.0001)  # 最小0.1ms
-        else:
-            sleep_time = config.detect_interval
-        time.sleep(sleep_time)
+        # 控制檢測頻率
+        time.sleep(config.detect_interval)
 
 def auto_fire_loop(config, boxes_queue):
-    """自動開火功能的獨立循環 - 修復按鍵更新問題"""
+    """自動開火功能的獨立循環"""
     # 設定線程優先級
     set_thread_priority = optimize_cpu_performance(config)
     if set_thread_priority:
@@ -415,10 +468,9 @@ def auto_fire_loop(config, boxes_queue):
     cached_boxes = []
     last_box_update = 0
     
-    # 優化參數 - 根據檢測間隔調整
-    BOX_UPDATE_INTERVAL = 1 / 60
+    BOX_UPDATE_INTERVAL = 1 / 60  # 60Hz更新頻率
     
-    # 修復：動態更新按鍵配置
+    # 緩存按鍵配置
     auto_fire_key = config.auto_fire_key
     auto_fire_key2 = getattr(config, 'auto_fire_key2', None)
     last_key_update = 0
@@ -427,20 +479,16 @@ def auto_fire_loop(config, boxes_queue):
     while config.Running:
         current_time = time.time()
         
-        # 修復：定期更新按鍵配置，允許動態更改
+        # 定期更新按鍵配置
         if current_time - last_key_update > key_update_interval:
             auto_fire_key = config.auto_fire_key
             auto_fire_key2 = getattr(config, 'auto_fire_key2', None)
             last_key_update = current_time
         
-        # 使用更新後的按鍵配置
+        # 檢查按鍵狀態
         key_state = is_key_pressed(auto_fire_key)
         if auto_fire_key2:
             key_state = key_state or is_key_pressed(auto_fire_key2)
-        
-        # 調試：首次按下按鍵時輸出信息
-        if key_state and not last_key_state:
-            print(f"[自動開火] 按鍵觸發 - 主鍵: {auto_fire_key}, 副鍵: {auto_fire_key2}")
 
         # 處理按鍵狀態變化
         if key_state and not last_key_state:
@@ -452,20 +500,18 @@ def auto_fire_loop(config, boxes_queue):
                 # 檢查射擊冷卻時間
                 if current_time - last_fire_time >= config.auto_fire_interval:
                     
-                    # 優化：動態調整boxes更新頻率
+                    # 更新檢測框緩存
                     if current_time - last_box_update >= BOX_UPDATE_INTERVAL:
                         try:
-                            # 修復：透過直接存取底層 deque 來「偷看」最新項目，而不是消耗它。
-                            # 這樣可以防止自動開火線程與UI繪圖線程競爭框體數據，解決UI卡頓問題。
+                            # 從隊列中獲取最新的檢測結果（不消耗隊列）
                             if not boxes_queue.empty():
                                 cached_boxes = boxes_queue.queue[-1]
                                 last_box_update = current_time
                         except IndexError:
-                            # 在多線程環境下，即使檢查過 not empty，隊列仍可能在訪問前變空。
-                            # 這種情況下，我們什麼都不做，繼續使用舊的 cached_boxes。
+                            # 隊列為空，使用舊的緩存
                             pass
                     
-                    # 優化：預計算瞄準參數
+                    # 判斷是否應該開火
                     if cached_boxes:
                         crosshair_x, crosshair_y = config.crosshairX, config.crosshairY
                         target_part = config.auto_fire_target_part
@@ -473,14 +519,14 @@ def auto_fire_loop(config, boxes_queue):
                         head_width_ratio = config.head_width_ratio
                         body_width_ratio = config.body_width_ratio
                         
-                        # 快速射擊判斷
+                        # 射擊判斷
                         should_fire = False
                         for box in cached_boxes:
                             x1, y1, x2, y2 = box
                             box_w, box_h = x2 - x1, y2 - y1
                             box_center_x = x1 + box_w * 0.5
                             
-                            # 優化：快速邊界檢查
+                            # 邊界檢查
                             if target_part == "head":
                                 head_h = box_h * head_height_ratio
                                 head_w = box_w * head_width_ratio
@@ -495,7 +541,7 @@ def auto_fire_loop(config, boxes_queue):
                                 body_y1 = y1 + box_h * head_height_ratio
                                 should_fire = (body_x1 <= crosshair_x <= body_x2 and body_y1 <= crosshair_y <= y2)
                             elif target_part == "both":
-                                # 快速計算頭部和身體區域
+                                # 檢查頭部和身體區域
                                 head_h = box_h * head_height_ratio
                                 head_w = box_w * head_width_ratio
                                 head_x1 = box_center_x - head_w * 0.5
@@ -514,15 +560,13 @@ def auto_fire_loop(config, boxes_queue):
                                     should_fire = True
 
                             if should_fire:
-                                # 使用配置的滑鼠點擊方式進行射擊
+                                # 執行射擊
                                 mouse_click_method = getattr(config, 'mouse_click_method', 'mouse_event')
-                                print(f"[自動開火] 觸發射擊 - 方式: {mouse_click_method}, 目標: {target_part}")
                                 send_mouse_click(mouse_click_method)
                                 last_fire_time = current_time
                                 break
         else:
             delay_start_time = None
-            # 優化：按鍵未按下時清空緩存
             if cached_boxes:
                 cached_boxes = []
 
@@ -533,7 +577,7 @@ def auto_fire_loop(config, boxes_queue):
 
 
 def aim_toggle_key_listener(config, update_gui_callback=None):
-    """持續監聽自動瞄準開關快捷鍵 - 優化版本"""
+    """持續監聽自動瞄準開關快捷鍵"""
     # 設定線程優先級
     set_thread_priority = optimize_cpu_performance(config)
     if set_thread_priority:
@@ -547,14 +591,12 @@ def aim_toggle_key_listener(config, update_gui_callback=None):
     from win_utils import get_vk_name
     key_name = get_vk_name(key_code)
     
-    # 優化：預計算睡眠時間
-    performance_mode = getattr(config, 'performance_mode', False)
-    sleep_interval = 0.01 if performance_mode else 0.03  # 性能模式下更頻繁檢查
+    sleep_interval = 0.03  # 30ms 檢查間隔
     
     
     while config.Running:
         try:
-            # 重新獲取快捷鍵設置（可能在 GUI 中被更改）
+            # 重新獲取快捷鍵設置
             current_key_code = getattr(config, 'aim_toggle_key', 0x78)
             if current_key_code != key_code:
                 key_code = current_key_code
@@ -563,7 +605,7 @@ def aim_toggle_key_listener(config, update_gui_callback=None):
             # 檢測按鍵狀態
             state = bool(win32api.GetAsyncKeyState(key_code) & 0x8000)
             
-            # 檢測按鍵按下事件（從未按下到按下的轉換）
+            # 檢測按鍵按下事件
             if state and not last_state:
                 old_state = config.AimToggle
                 config.AimToggle = not config.AimToggle
@@ -574,18 +616,19 @@ def aim_toggle_key_listener(config, update_gui_callback=None):
             
             last_state = state
             
-            
         except Exception as e:
             print(f"[快捷鍵監聽] 錯誤: {e}")
             import traceback
             traceback.print_exc()
         
-        # 優化：根據性能模式調整睡眠時間
         time.sleep(sleep_interval)
 
 if __name__ == "__main__":
     # 檢查管理員權限
     check_and_request_admin()
+
+    # Ensure ddxoft loads only after admin privileges are confirmed
+    ensure_ddxoft_ready()
     
     # 在程序開始時檢測 Windows 縮放比例
     if not check_windows_scaling():
@@ -626,23 +669,31 @@ if __name__ == "__main__":
         if model_path.endswith('.onnx'):
             model_type = 'onnx'
             try:
+                # 嘗試使用GPU，如果失敗則回退到CPU
                 providers = ['DmlExecutionProvider', 'CPUExecutionProvider']
-                
+
                 # 獲取優化的會話選項
                 session_options = optimize_onnx_session(config)
                 if session_options:
                     model = ort.InferenceSession(model_path, providers=providers, sess_options=session_options)
                 else:
                     model = ort.InferenceSession(model_path, providers=providers)
-                
-                config.current_provider = model.get_providers()[0]
+
+                # 獲取實際使用的提供者
+                actual_providers = model.get_providers()
+                config.current_provider = actual_providers[0] if actual_providers else 'CPUExecutionProvider'
             except Exception as e:
                 print(f"載入 ONNX 模型失敗: {e}"); return False
         elif model_path.endswith('.pt'):
             model_type = 'pt'
             try:
+                cpu_device = 'cpu'
                 model = YOLO(model_path)
-                model(np.zeros((640, 640, 3), dtype=np.uint8), verbose=False) # 預熱
+                model.to(cpu_device)
+                config.torch_device = cpu_device
+                config.current_provider = 'CPU'
+                with torch.no_grad():
+                    model(np.zeros((640, 640, 3), dtype=np.uint8), verbose=False, device=cpu_device)  # 預熱
             except Exception as e:
                 print(f"載入 PyTorch 模型失敗: {e}"); return False
         else:

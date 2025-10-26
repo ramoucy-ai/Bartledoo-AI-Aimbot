@@ -13,8 +13,22 @@ import tkinter.messagebox as messagebox
 from win_utils import VK_CODE_MAP, get_vk_name
 from config import save_config
 from language_manager import language_manager, get_text  # 新增導入
-from about import show_about_window  # 導入關於視窗
+  # 導入關於視窗
 from preset_manager import PresetManagerGUI
+
+LANGUAGE_BUTTON_LABEL = "Language"
+LANGUAGE_DISPLAY_NAMES = {
+    "zh_tw": "Chinese 中文",
+    "en": "English",
+    "ko": "Korean 한국어",
+    "es": "Spanish Español",
+    "fr": "French Français",
+    "pt": "Portuguese Português",
+    "hi": "Hindi हिन्दी",
+    "ru": "Russian Русский",
+    "de": "German Deutsch",
+    "ja": "Japanese 日本語",
+}
 
 # PIL 兼容性處理
 try:
@@ -103,6 +117,8 @@ class SettingsWindow:
         self.config = config
         self.start_ai_threads = start_ai_threads
         self.language_manager = language_manager  # 新增
+        self.language_dialog = None
+        self.language_display_names = LANGUAGE_DISPLAY_NAMES
         self.master.title(get_text("window_title"))
         self.master.geometry('999x777')
         self.master.protocol("WM_DELETE_WINDOW", self.quit_program)
@@ -140,9 +156,8 @@ class SettingsWindow:
         lang_frame.pack(side="right", padx=20)
         
         # 根據當前語言決定按鈕文字
-        current_lang = self.language_manager.get_current_language()
-        donate_text = get_text("donate") if current_lang == "zh_tw" else get_text("donate_en")
-        button_text = get_text("english") if current_lang == "zh_tw" else get_text("chinese")
+        donate_text = get_text("donate")
+        button_text = LANGUAGE_BUTTON_LABEL
         
         # 心型捐款按鈕
         self.donate_button = HeartButton(lang_frame,
@@ -253,7 +268,7 @@ class SettingsWindow:
         
         self.fov_size_slider = self.create_slider(params_frame, get_text("fov_size"), self.config.fov_size, 50, min(self.config.width, self.config.height), self.fov_size_configurator, slider_name="fov_size")
         self.min_confidence_slider = self.create_slider(params_frame, get_text("min_confidence"), self.config.min_confidence * 100, 0, 100, self.min_confidence_configurator, slider_name="min_confidence")
-        self.detect_interval_slider = self.create_slider(params_frame, get_text("detect_interval"), self.config.detect_interval * 1000, 0.1, 10, self.detect_interval_configurator, slider_name="detect_interval")
+        self.detect_interval_slider = self.create_slider(params_frame, get_text("detect_interval"), self.config.detect_interval * 1000, 1, 100, self.detect_interval_configurator, slider_name="detect_interval")
         
         # 滑鼠移動方式選擇
         mouse_move_frame = tk.Frame(params_frame, bg=self.bg_frame)
@@ -263,10 +278,9 @@ class SettingsWindow:
         
         # 滑鼠移動方式選項
         mouse_move_options = [
-            ("sendinput", "SendInput (原始方式，容易被檢測)"),
-            ("hardware", "硬件層級 (較隱蔽)"),
-            ("mouse_event", "mouse_event (很隱蔽)"),
-            ("ddxoft", get_text("mouse_move_ddxoft"))
+            ("sendinput", "SendInput"),
+            ("mouse_event", "mouse_event"),
+            ("ddxoft", "ddxoft")
         ]
         
         self.mouse_move_var = tk.StringVar(value=getattr(self.config, 'mouse_move_method', 'mouse_event'))
@@ -279,10 +293,9 @@ class SettingsWindow:
         # 設置當前選中的值
         current_method = getattr(self.config, 'mouse_move_method', 'mouse_event')
         mouse_move_options_dict = {
-            "sendinput": "SendInput (原始方式，容易被檢測)",
-            "hardware": "硬件層級 (較隱蔽)",
-            "mouse_event": "mouse_event (很隱蔽)",
-            "ddxoft": get_text("mouse_move_ddxoft")
+            "sendinput": "SendInput",
+            "mouse_event": "mouse_event",
+            "ddxoft": "ddxoft"
         }
         if current_method in mouse_move_options_dict:
             self.mouse_move_var.set(mouse_move_options_dict[current_method])
@@ -675,9 +688,50 @@ class SettingsWindow:
         btn_container = tk.Frame(control_frame, bg=self.bg_frame)
         btn_container.pack(pady=15)
         
-        tk.Button(btn_container, text=get_text("toggle_auto_aim"), command=self.toggle_aim, bg=self.btn_bg, fg=self.fg_text, activebackground=self.btn_active, font=("Arial", 10), width=12, height=2).pack(side="left", padx=8)
-        tk.Button(btn_container, text=get_text("about"), command=self.show_about, bg="#4CAF50", fg="white", activebackground="#45a049", font=("Arial", 10), width=12, height=2).pack(side="left", padx=8)
-        tk.Button(btn_container, text=get_text("exit_and_save"), command=self.quit_program, bg=self.btn_bg, fg=self.fg_text, activebackground=self.btn_active, font=("Arial", 10), width=12, height=2).pack(side="left", padx=8)
+        tk.Button(btn_container, text=get_text("toggle_auto_aim"), command=self.toggle_aim, 
+                 bg=self.btn_bg, fg=self.fg_text, activebackground=self.btn_active, 
+                 font=("Arial", 10), width=12, height=2).pack(side="left", padx=8)
+        tk.Button(btn_container, text=get_text("exit_and_save"), command=self.quit_program, 
+                 bg=self.btn_bg, fg=self.fg_text, activebackground=self.btn_active, 
+                 font=("Arial", 10), width=12, height=2).pack(side="left", padx=8)
+
+        # 社群連結按鈕
+        social_frame = tk.Frame(control_frame, bg=self.bg_frame)
+        social_frame.pack(pady=15)
+
+        # Discord 按鈕
+        discord_btn = tk.Button(social_frame, 
+                               text="Discord", 
+                               command=self.open_discord,
+                               bg="#5865F2", 
+                               fg="white",
+                               font=("Arial", 10, "bold"),
+                               relief="flat",
+                               padx=20,
+                               pady=10,
+                               cursor="hand2",
+                               width=15,
+                               height=2)
+        discord_btn.pack(side="left", padx=8)
+
+        # GitHub 按鈕
+        github_btn = tk.Button(social_frame, 
+                              text="GitHub", 
+                              command=self.open_github,
+                              bg="#24292e", 
+                              fg="white",
+                              font=("Arial", 10, "bold"),
+                              relief="flat",
+                              padx=20,
+                              pady=10,
+                              cursor="hand2",
+                              width=15,
+                              height=2)
+        github_btn.pack(side="left", padx=8)
+
+        # 添加鼠標懸停效果
+        self.add_hover_effect(discord_btn, "#4752C4", "#5865F2")
+        self.add_hover_effect(github_btn, "#1a1f23", "#24292e")
 
     def create_slider(self, parent, text, default_val, from_, to, command, res: Union[int, float] = 1, val_format="", length=200, slider_name=""):
         frame = tk.Frame(parent, bg=parent.cget("bg"))
@@ -885,12 +939,72 @@ class SettingsWindow:
         self.master.after(100, self.poll_aimtoggle_status)
 
     def toggle_language(self):
-        """切換語言"""
-        current_lang = self.language_manager.get_current_language()
-        new_lang = "en" if current_lang == "zh_tw" else "zh_tw"
-        self.language_manager.set_language(new_lang)
+        """Open the language selection dialog."""
+        if self.language_dialog and self.language_dialog.winfo_exists():
+            self.language_dialog.deiconify()
+            self.language_dialog.lift()
+            self.language_dialog.focus_force()
+            return
+
+        dialog = tk.Toplevel(self.master)
+        self.language_dialog = dialog
+        dialog.title("Select Language")
+        dialog.configure(bg=self.bg_frame)
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
+
+        def on_close():
+            self.close_language_dialog()
+
+        dialog.protocol("WM_DELETE_WINDOW", on_close)
+
+        header = tk.Label(
+            dialog,
+            text="Select Language",
+            font=("Arial", 12, "bold"),
+            bg=self.bg_frame,
+            fg=self.fg_text,
+        )
+        header.pack(fill="x", padx=20, pady=(15, 10))
+
+        for code in self.language_manager.get_available_languages():
+            display_label = self.language_display_names.get(code, code)
+            btn = tk.Button(
+                dialog,
+                text=display_label,
+                anchor="w",
+                command=lambda c=code: self._apply_language_selection(c),
+                bg=self.btn_bg,
+                fg=self.fg_text,
+                activebackground=self.btn_active,
+                activeforeground=self.fg_text,
+                relief="flat",
+                padx=12,
+                pady=6,
+                width=24,
+            )
+            btn.pack(fill="x", padx=20, pady=4)
+
+        dialog.update_idletasks()
+        dialog.lift()
+        dialog.focus_force()
+
+    def _apply_language_selection(self, language_code):
+        """Apply the selected language from the dialog."""
+        self.language_manager.set_language(language_code)
+        self.close_language_dialog()
         self.refresh_ui_text()
 
+    def close_language_dialog(self):
+        """Close the language selection dialog if it exists."""
+        if self.language_dialog and self.language_dialog.winfo_exists():
+            try:
+                self.language_dialog.grab_release()
+            except tk.TclError:
+                pass
+            self.language_dialog.destroy()
+        self.language_dialog = None
 
 
 
@@ -898,10 +1012,8 @@ class SettingsWindow:
         """刷新所有UI文字"""
         self.master.title(get_text("window_title"))
         # 更新語言切換按鈕文字
-        current_lang = self.language_manager.get_current_language()
-        button_text = get_text("english") if current_lang == "zh_tw" else get_text("chinese")
-        self.lang_button.config(text=button_text)
-        donate_text = get_text("donate") if current_lang == "zh_tw" else get_text("donate_en")
+        self.lang_button.config(text=LANGUAGE_BUTTON_LABEL)
+        donate_text = get_text("donate")
         self.donate_button.config(text=donate_text)
         self.restart_gui()
 
@@ -922,9 +1034,27 @@ class SettingsWindow:
     def open_donate_page(self):
         os.startfile(os.path.join(os.path.dirname(__file__), 'MVP.html'))
     
-    def show_about(self):
-        """顯示關於視窗"""
-        show_about_window(self.master)
+    def open_discord(self):
+        """開啟 Discord 連結"""
+        import webbrowser
+        webbrowser.open("https://discord.gg/h4dEh3b8Bt")
+
+    def open_github(self):
+        """開啟 GitHub 連結"""
+        import webbrowser
+        webbrowser.open("https://github.com/iisHong0w0/Axiom-AI_Aimbot")
+
+    def add_hover_effect(self, button, hover_color, normal_color):
+        """為按鈕添加鼠標懸停效果"""
+        def on_enter(e):
+            button.configure(bg=hover_color)
+        
+        def on_leave(e):
+            button.configure(bg=normal_color)
+        
+        button.bind("<Enter>", on_enter)
+        button.bind("<Leave>", on_leave)
+    
 
     def toggle_single_target_mode(self):
         self.config.single_target_mode = self.single_target_var.get()
@@ -935,10 +1065,9 @@ class SettingsWindow:
         
         # 根據顯示文字找到對應的值
         mouse_move_options = {
-            "SendInput (原始方式，容易被檢測)": "sendinput",
-            "硬件層級 (較隱蔽)": "hardware",
-            "mouse_event (很隱蔽)": "mouse_event",
-            get_text("mouse_move_ddxoft"): "ddxoft"
+            "SendInput": "sendinput",
+            "mouse_event": "mouse_event",
+            "ddxoft": "ddxoft"
         }
         
         if selected_text in mouse_move_options:
@@ -988,10 +1117,9 @@ class SettingsWindow:
             if hasattr(self, 'mouse_move_var'):
                 current_method = getattr(self.config, 'mouse_move_method', 'mouse_event')
                 mouse_move_options_dict = {
-                    "sendinput": "SendInput (原始方式，容易被檢測)",
-                    "hardware": "硬件層級 (較隱蔽)",
-                    "mouse_event": "mouse_event (很隱蔽)",
-                    "ddxoft": get_text("mouse_move_ddxoft")
+                    "sendinput": "SendInput",
+                    "mouse_event": "mouse_event",
+                    "ddxoft": "ddxoft"
                 }
                 if current_method in mouse_move_options_dict:
                     self.mouse_move_var.set(mouse_move_options_dict[current_method])
@@ -1241,14 +1369,11 @@ class SettingsWindow:
                 messagebox.showerror("錯誤", "匯出預設失敗!")
 
     def get_compute_mode_text(self):
-        """取得目前運算模式文字（如 CPU/GPU）"""
-        provider = getattr(self.config, 'current_provider', 'CPUExecutionProvider')
-        if provider == 'CPUExecutionProvider':
-            return 'CPU'
-        elif provider == 'DmlExecutionProvider':
+        """取得目前運算模式文字（DirectML）"""
+        provider = getattr(self.config, 'current_provider', 'DmlExecutionProvider')
+        if provider == 'DmlExecutionProvider':
             return 'GPU (DirectML)'
-        else:
-            return str(provider)
+        return str(provider)
 
 def create_settings_gui(config, start_ai_threads=None):
     root = tk.Tk()

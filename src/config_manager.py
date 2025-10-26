@@ -1,4 +1,4 @@
-# preset_manager.py
+# config_manager.py
 import json
 import os
 import shutil
@@ -8,38 +8,38 @@ from tkinter import ttk, messagebox, filedialog, simpledialog
 from config import Config, save_config, load_config
 from language_manager import get_text
 
-class PresetManager:
+class ConfigManager:
     def __init__(self):
-        self.presets_dir = "presets"
-        self.ensure_presets_directory()
-        
-    def ensure_presets_directory(self):
+        self.configs_dir = "configs"
+        self.ensure_configs_directory()
+
+    def ensure_configs_directory(self):
         """確保參數配置目錄存在"""
-        if not os.path.exists(self.presets_dir):
-            os.makedirs(self.presets_dir)
-            
-    def get_preset_list(self):
+        if not os.path.exists(self.configs_dir):
+            os.makedirs(self.configs_dir)
+
+    def get_config_list(self):
         """獲取所有參數配置列表"""
-        if not os.path.exists(self.presets_dir):
+        if not os.path.exists(self.configs_dir):
             return []
-        
-        presets = []
-        for file in os.listdir(self.presets_dir):
+
+        configs = []
+        for file in os.listdir(self.configs_dir):
             if file.endswith('.json'):
-                preset_name = file[:-5]  # 移除.json後綴
-                presets.append(preset_name)
-        return sorted(presets)
+                config_name = file[:-5]  # 移除.json後綴
+                configs.append(config_name)
+        return sorted(configs)
     
-    def save_preset(self, config_instance, preset_name):
+    def save_config(self, config_instance, config_name):
         """保存當前配置為參數配置"""
-        preset_path = os.path.join(self.presets_dir, f"{preset_name}.json")
+        config_path = os.path.join(self.configs_dir, f"{config_name}.json")
         
-        # 創建預設配置數據 - 確保包含所有重要參數
-        preset_data = {
-            'name': preset_name,
+        # 創建參數配置數據 - 確保包含所有重要參數
+        config_data = {
+            'name': config_name,
             'created_time': datetime.now().isoformat(),
-            'description': f"參數配置 - {preset_name}",
-            'config': {
+            'description': f"參數配置 - {config_name}",
+            'parameters': {
                 # 基本檢測參數
                 'fov_size': getattr(config_instance, 'fov_size', 666),
                 'min_confidence': getattr(config_instance, 'min_confidence', 0.66),
@@ -112,45 +112,45 @@ class PresetManager:
             print(f"保存參數配置失敗: {e}")
             return False
     
-    def load_preset(self, config_instance, preset_name):
+    def load_config(self, config_instance, config_name):
         """載入參數配置"""
-        preset_path = os.path.join(self.presets_dir, f"{preset_name}.json")
-        
-        if not os.path.exists(preset_path):
+        config_path = os.path.join(self.configs_dir, f"{config_name}.json")
+
+        if not os.path.exists(config_path):
             return False
             
         try:
-            with open(preset_path, 'r', encoding='utf-8') as f:
-                preset_data = json.load(f)
-            
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+
             # 載入配置到實例
-            config_data = preset_data.get('config', {})
-            for key, value in config_data.items():
+            parameters = config_data.get('parameters', {})
+            for key, value in parameters.items():
                 if hasattr(config_instance, key):
                     setattr(config_instance, key, value)
-            
+
             return True
         except Exception as e:
             print(f"載入參數配置失敗: {e}")
             return False
     
-    def delete_preset(self, preset_name):
+    def delete_config(self, config_name):
         """刪除參數配置"""
-        preset_path = os.path.join(self.presets_dir, f"{preset_name}.json")
+        config_path = os.path.join(self.configs_dir, f"{config_name}.json")
         
-        if os.path.exists(preset_path):
+        if os.path.exists(config_path):
             try:
-                os.remove(preset_path)
+                os.remove(config_path)
                 return True
             except Exception as e:
                 print(f"刪除參數配置失敗: {e}")
                 return False
         return False
     
-    def rename_preset(self, old_name, new_name):
+    def rename_config(self, old_name, new_name):
         """重命名參數配置"""
-        old_path = os.path.join(self.presets_dir, f"{old_name}.json")
-        new_path = os.path.join(self.presets_dir, f"{new_name}.json")
+        old_path = os.path.join(self.configs_dir, f"{old_name}.json")
+        new_path = os.path.join(self.configs_dir, f"{new_name}.json")
         
         if os.path.exists(old_path) and not os.path.exists(new_path):
             try:
@@ -171,20 +171,20 @@ class PresetManager:
                 return False
         return False
     
-    def export_preset(self, preset_name, export_path):
+    def export_config(self, config_name, export_path):
         """匯出參數配置"""
-        preset_path = os.path.join(self.presets_dir, f"{preset_name}.json")
+        config_path = os.path.join(self.configs_dir, f"{config_name}.json")
         
-        if os.path.exists(preset_path):
+        if os.path.exists(config_path):
             try:
-                shutil.copy2(preset_path, export_path)
+                shutil.copy2(config_path, export_path)
                 return True
             except Exception as e:
                 print(f"匯出參數配置失敗: {e}")
                 return False
         return False
     
-    def import_preset(self, import_path):
+    def import_config(self, import_path):
         """匯入參數配置"""
         if not os.path.exists(import_path):
             return False
@@ -192,26 +192,26 @@ class PresetManager:
         try:
             # 讀取匯入的配置
             with open(import_path, 'r', encoding='utf-8') as f:
-                preset_data = json.load(f)
-            
+                config_data = json.load(f)
+
             # 獲取配置名稱
-            preset_name = preset_data.get('name', 'imported_preset')
-            
+            config_name = config_data.get('name', 'imported_config')
+
             # 確保名稱唯一
-            original_name = preset_name
+            original_name = config_name
             counter = 1
-            while os.path.exists(os.path.join(self.presets_dir, f"{preset_name}.json")):
-                preset_name = f"{original_name}_{counter}"
+            while os.path.exists(os.path.join(self.configs_dir, f"{config_name}.json")):
+                config_name = f"{original_name}_{counter}"
                 counter += 1
             
             # 更新名稱並保存
-            preset_data['name'] = preset_name
-            preset_path = os.path.join(self.presets_dir, f"{preset_name}.json")
+            config_data['name'] = config_name
+            config_path = os.path.join(self.configs_dir, f"{config_name}.json")
             
-            with open(preset_path, 'w', encoding='utf-8') as f:
-                json.dump(preset_data, f, ensure_ascii=False, indent=2)
-            
-            return preset_name
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, ensure_ascii=False, indent=2)
+
+            return config_name
         except Exception as e:
             print(f"匯入參數配置失敗: {e}")
             return False

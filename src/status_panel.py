@@ -24,20 +24,24 @@ def draw_text_with_outline(painter, x, y, text, text_color, outline_color=QColor
     painter.drawText(x, y, text)
 
 def get_compute_mode_text(config):
-    """獲取運算模式文字，支援 ONNX 和 PyTorch 模型"""
+    """取得目前運算模式文字"""
     model_path = getattr(config, 'model_path', '')
-    
-    # 檢查是否為 PyTorch 模型
+
+    # PyTorch 模型使用 CPU
     if model_path.endswith('.pt'):
-        # 移除 CUDA 支援，PyTorch 模型只使用 CPU
-        return get_text("cpu")
-    
-    # ONNX 模型邏輯
-    current_provider = getattr(config, 'current_provider', 'CPUExecutionProvider')
-    if "Dml" in current_provider:
-        return get_text("gpu_directml")
-    else:
-        return get_text("cpu")
+        return get_text('cpu')
+
+    # 檢查當前使用的提供者
+    current_provider = getattr(config, 'current_provider', 'DmlExecutionProvider')
+    if 'Dml' in current_provider or 'CUDA' in current_provider or 'GPU' in current_provider:
+        return get_text('gpu_directml')
+
+    # CPU執行器或PyTorch模型使用CPU
+    if 'CPU' in current_provider or current_provider == 'CPU':
+        return get_text('cpu')
+
+    # 默認情況下返回 CPU
+    return get_text('cpu')
 
 class StatusPanel(QWidget):
     """
@@ -123,7 +127,7 @@ class StatusPanel(QWidget):
         """觸發重繪事件 - 優化版本，只在狀態改變時重繪"""
         # 檢查狀態是否有變化
         current_aim_state = self.config.AimToggle
-        current_provider = getattr(self.config, 'current_provider', 'CPUExecutionProvider')
+        current_provider = getattr(self.config, 'current_provider', 'DmlExecutionProvider')
         current_model_path = getattr(self.config, 'model_path', '')
         current_language = language_manager.get_current_language()  # 檢查語言變化
         

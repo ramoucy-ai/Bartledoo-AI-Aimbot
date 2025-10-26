@@ -56,32 +56,47 @@ class PIDController:
             return 0.5 + (kp - 0.5) * 3.0
 
 def preprocess_image(image, model_input_size):
-    """預處理圖像以適配ONNX模型"""
-    resized = cv2.resize(image, (model_input_size, model_input_size))
-    rgb_image = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-    normalized = rgb_image.astype(np.float32) / 255.0
-    input_tensor = np.transpose(normalized, (2, 0, 1))
-    input_tensor = np.expand_dims(input_tensor, axis=0)
+    """預處理圖像以適配ONNX模型 - 優化版本"""
+    # 使用更快的插值方法
+    resized = cv2.resize(image, (model_input_size, model_input_size), 
+                        interpolation=cv2.INTER_LINEAR)
+    
+    # 合併顏色轉換和歸一化（減少記憶體分配）
+    rgb_normalized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) * (1.0 / 255.0)
+    
+    # 使用連續記憶體布局的轉置
+    input_tensor = np.ascontiguousarray(
+        rgb_normalized.transpose(2, 0, 1)[np.newaxis, :, :, :]
+    )
+    
     return input_tensor
 
-def postprocess_outputs(outputs, original_width, original_height, model_input_size, min_confidence):
-    """後處理ONNX模型輸出"""
+def postprocess_outputs(outputs, original_width, original_height, model_input_size, min_confidence, offset_x=0, offset_y=0):
+    """後處理ONNX模型輸出 - 優化版本"""
     predictions = outputs[0][0].T
-    boxes, confidences = [], []
+    
+    # 向量化過濾：先篩選高置信度的檢測
+    conf_mask = predictions[:, 4] >= min_confidence
+    filtered_predictions = predictions[conf_mask]
+    
+    if len(filtered_predictions) == 0:
+        return [], []
+    
+    # 向量化計算邊界框
     scale_x = original_width / model_input_size
     scale_y = original_height / model_input_size
+    
+    cx, cy, w, h = filtered_predictions[:, 0], filtered_predictions[:, 1], \
+                   filtered_predictions[:, 2], filtered_predictions[:, 3]
+    
+    x1 = (cx - w / 2) * scale_x + offset_x
+    y1 = (cy - h / 2) * scale_y + offset_y
+    x2 = (cx + w / 2) * scale_x + offset_x
+    y2 = (cy + h / 2) * scale_y + offset_y
 
-    for detection in predictions:
-        confidence = detection[4]
-        if confidence >= min_confidence:
-            cx, cy, w, h = detection[:4]
-            x1 = (cx - w / 2) * scale_x
-            y1 = (cy - h / 2) * scale_y
-            x2 = (cx + w / 2) * scale_x
-            y2 = (cy + h / 2) * scale_y
-            boxes.append([x1, y1, x2, y2])
-            confidences.append(confidence)
-            
+    boxes = np.stack([x1, y1, x2, y2], axis=1).tolist()
+    confidences = filtered_predictions[:, 4].tolist()
+
     return boxes, confidences
 
 def non_max_suppression(boxes, confidences, iou_threshold=0.4):

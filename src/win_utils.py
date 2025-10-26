@@ -83,34 +83,27 @@ MOUSEEVENTF_MOVE = 0x0001
 
 def send_mouse_move_sendinput(dx, dy):
     """方式1: SendInput API (原始方式，容易被檢測)"""
-    print(f"[滑鼠移動] 使用 SendInput 方式，移動: ({dx}, {dy})")
     extra = ctypes.c_ulong(0)
     ii_ = INPUT._INPUT_UNION()
     ii_.mi = MOUSEINPUT(dx, dy, 0, MOUSEEVENTF_MOVE, 0, ctypes.pointer(extra))
     command = INPUT(INPUT_MOUSE, ii_)
     ctypes.windll.user32.SendInput(1, ctypes.byref(command), ctypes.sizeof(command))
 
-# 方式2: 硬件層級模擬
-def send_mouse_move_hardware(dx, dy):
-    """方式2: 硬件層級滑鼠移動模擬"""
-    print(f"[滑鼠移動] 使用硬件層級方式，移動: ({dx}, {dy})")
+# 方式2: 硬件層級模擬 (已移除，不再使用)
+# def send_mouse_move_hardware(dx, dy):
+#     """方式2: 硬件層級滑鼠移動模擬"""
+#     try:
+#         win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, dx, dy, 0, 0)
+#     except Exception as e:
+#         print(f"硬件層級移動失敗: {e}")
+
+# 方式3: mouse_event (直接執行，不使用線程)
+def send_mouse_move_mouse_event(dx, dy):
+    """方式3: mouse_event 移動（直接執行）"""
     try:
         win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, dx, dy, 0, 0)
-    except Exception as e:
-        print(f"硬件層級移動失敗: {e}")
-
-# 方式3: mouse_event (異步)
-def send_mouse_move_mouse_event(dx, dy):
-    """方式3: mouse_event 移動（異步執行）"""
-    print(f"[滑鼠移動] 使用 mouse_event 方式，移動: ({dx}, {dy})")
-    def mouse_event_move():
-        try:
-            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, dx, dy, 0, 0)
-        except Exception:
-            pass
-    
-    # 異步執行
-    threading.Thread(target=mouse_event_move, daemon=True).start()
+    except Exception:
+        pass
 
 # 方式4: ddxoft (最隱蔽) - 面向對象接口
 class DDXoftMouse:
@@ -122,7 +115,13 @@ class DDXoftMouse:
         self.success_count = 0      # 成功次數
         self.failure_count = 0      # 失敗次數
         self.last_status = None     # 最後一次操作狀態
-        self._init_dll()
+
+    def ensure_initialized(self):
+        """Lazy-load the ddxoft DLL when needed."""
+        if self.available:
+            return True
+        return self._init_dll()
+
     
     def _init_dll(self):
         """初始化 ddxoft DLL"""
@@ -179,7 +178,7 @@ class DDXoftMouse:
     
     def move_relative(self, dx, dy):
         """相對移動滑鼠"""
-        if not self.available:
+        if not self.ensure_initialized():
             print("[ddxoft] DLL 未初始化或不可用")
             self.failure_count += 1
             self.last_status = "DLL_NOT_AVAILABLE"
@@ -229,7 +228,7 @@ class DDXoftMouse:
     
     def click_left(self):
         """左鍵點擊"""
-        if not self.available:
+        if not self.ensure_initialized():
             print("[ddxoft] DLL 未初始化或不可用，無法點擊")
             self.failure_count += 1
             self.last_status = "DLL_NOT_AVAILABLE"
@@ -297,7 +296,7 @@ class DDXoftMouse:
         """測試 ddxoft 功能並診斷問題"""
         print("[ddxoft] 開始診斷測試...")
         
-        if not self.available:
+        if not self.ensure_initialized():
             print("[ddxoft] ✗ DLL 未初始化")
             return False
         
@@ -327,30 +326,28 @@ class DDXoftMouse:
 # 創建全局 ddxoft_mouse 實例
 ddxoft_mouse = DDXoftMouse()
 
-# ddxoft 統計顯示控制變量
+# ddxoft 統計控制變量
 _ddxoft_move_count = 0
-_ddxoft_last_stats_display = 0
 
 def send_mouse_move_ddxoft(dx, dy):
     """方式4: ddxoft 移動（最隱蔽）"""
-    global _ddxoft_move_count, _ddxoft_last_stats_display
-    
+    global _ddxoft_move_count
+
+    if not ddxoft_mouse.ensure_initialized():
+        send_mouse_move_mouse_event(dx, dy)
+        return
+
     _ddxoft_move_count += 1
     
-    # 首次使用時確認
+    # 首次使用時確認（只打印一次）
     if _ddxoft_move_count == 1:
-        print(f"[ddxoft] ✓ 開始使用 ddxoft 滑鼠移動方式")
+        print(f"[ddxoft] 開始使用 ddxoft 滑鼠移動方式")
     
+    # 嘗試使用 ddxoft
     if ddxoft_mouse.move_relative(dx, dy):
-        # 成功使用 ddxoft
-        # 每 50 次移動顯示一次統計（避免刷屏）
-        if _ddxoft_move_count % 50 == 0:
-            stats = ddxoft_mouse.get_statistics()
-            print(f"[ddxoft] ✓ 已成功執行 {stats['success_count']} 次移動 (成功率: {stats['success_rate']:.1f}%)")
-        return
+        return  # 成功，直接返回
     
-    # 如果 ddxoft 失敗，回退到 mouse_event 方式
-    print(f"[ddxoft] ✗ 第 {_ddxoft_move_count} 次移動失敗，回退到 mouse_event 方式")
+    # ddxoft 失敗時靜默回退到 mouse_event
     send_mouse_move_mouse_event(dx, dy)
 
 
@@ -361,7 +358,6 @@ def send_mouse_move(dx, dy, method="mouse_event"):
     主要滑鼠移動函數
     method 選項:
     - "sendinput": SendInput (原始方式，容易被檢測)
-    - "hardware": 硬件層級 (較隱蔽)
     - "mouse_event": mouse_event (很隱蔽)
     - "ddxoft": ddxoft (最隱蔽，需要 ddxoft.dll)
     """
@@ -370,8 +366,6 @@ def send_mouse_move(dx, dy, method="mouse_event"):
     
     if method == "sendinput":
         send_mouse_move_sendinput(dx, dy)
-    elif method == "hardware":
-        send_mouse_move_hardware(dx, dy)
     elif method == "mouse_event":
         send_mouse_move_mouse_event(dx, dy)
     elif method == "ddxoft":
@@ -405,6 +399,10 @@ def send_mouse_click_ddxoft():
     """方式4: ddxoft 左鍵點擊"""
     global ddxoft_mouse
     try:
+        if not ddxoft_mouse.ensure_initialized():
+            send_mouse_click_mouse_event()
+            return True
+
         if ddxoft_mouse.click_left():
             return True
         else:
@@ -426,8 +424,6 @@ def send_mouse_click(method="mouse_event"):
     - "mouse_event": mouse_event (很隱蔽)
     - "ddxoft": ddxoft (最隱蔽，需要 ddxoft.dll)
     """
-    print(f"[點擊] 執行滑鼠點擊 - 方式: {method}")
-    
     try:
         if method == "sendinput":
             send_mouse_click_sendinput()
@@ -438,17 +434,14 @@ def send_mouse_click(method="mouse_event"):
         elif method == "ddxoft":
             return send_mouse_click_ddxoft()
         else:
-            print(f"[點擊] 未知的滑鼠點擊方式: {method}，使用預設方式")
-            send_mouse_click_mouse_event()
+            send_mouse_click_mouse_event()  # 默認方式
         return True
-    except Exception as e:
-        print(f"[點擊] 滑鼠點擊失敗: {e}")
-        # 萬無一失的回退到 mouse_event
+    except Exception:
+        # 靜默回退到 mouse_event
         try:
             send_mouse_click_mouse_event()
             return True
-        except Exception as e2:
-            print(f"[點擊] 回退點擊也失敗: {e2}")
+        except Exception:
             return False
 
 def is_key_pressed(key_code):
@@ -508,8 +501,12 @@ def check_and_request_admin():
         print("[權限管理] ✓ 程序已以管理員權限運行")
         return True
     else:
-        print("[權限管理] ⚠ 程序未以管理員權限運行")
+        print("[權限管理] 程序未以管理員權限運行")
         return request_admin_privileges()
+
+def ensure_ddxoft_ready():
+    """確保 ddxoft DLL 已初始化。"""
+    return ddxoft_mouse.ensure_initialized()
 
 def test_ddxoft_functions():
     """測試 ddxoft 功能的公共接口"""

@@ -31,7 +31,7 @@ class Config:
         self.model_input_size = 640
         default_model_name = 'Roblox.onnx'
         self.model_path = os.path.join('模型', default_model_name)
-        self.current_provider = "CPUExecutionProvider"
+        self.current_provider = "DmlExecutionProvider"
 
         # 瞄準與顯示設定
         self.AimKeys = [0x01, 0x06, 0x02]  # 左鍵 + X2鍵 + 右鍵
@@ -62,14 +62,12 @@ class Config:
         self.pid_ki_y = 0.0       # 垂直 I: 積分
         self.pid_kd_y = 0.0       # 垂直 D: 微分
 
-        # 新增：滑鼠移動方式選擇
-        self.mouse_move_method = "mouse_event"  # 固定使用mouse_event
-        
-        # 新增：滑鼠點擊方式選擇
-        self.mouse_click_method = "ddxoft"  # 使用ddxoft點擊方式
+        # 滑鼠控制方式
+        self.mouse_move_method = "mouse_event"  # 滑鼠移動方式
+        self.mouse_click_method = "ddxoft"  # 滑鼠點擊方式
 
-        # 優化：調整檢測間隔為更合理的值，平衡性能和響應速度
-        self.detect_interval = 1 / 60
+        # 檢測設定
+        self.detect_interval = 0.01  # 檢測間隔（秒），預設 10ms
         self.aim_toggle_key = 45  # Insert 鍵
         self.auto_fire_key2 = 0x04  # 滑鼠中鍵
         
@@ -175,6 +173,22 @@ def load_config(config_instance):
             # 為了兼容舊設定檔，檢查新參數是否存在
             if hasattr(config_instance, k):
                 setattr(config_instance, k, v)
+        
+        # 向後兼容：確保檢測間隔在合理範圍內 (1-100ms)
+        if hasattr(config_instance, 'detect_interval'):
+            detect_interval_ms = config_instance.detect_interval * 1000
+            if detect_interval_ms < 1:
+                config_instance.detect_interval = 0.001  # 1ms
+                print(f"[配置修正] 檢測間隔過小，已調整為 1ms")
+            elif detect_interval_ms > 100:
+                config_instance.detect_interval = 0.1  # 100ms
+                print(f"[配置修正] 檢測間隔過大，已調整為 100ms")
+
+        # 向後兼容：移除 hardware 滑鼠移動方式，改為 mouse_event
+        if hasattr(config_instance, 'mouse_move_method') and config_instance.mouse_move_method == 'hardware':
+            config_instance.mouse_move_method = 'mouse_event'
+            print(f"[配置修正] 已移除不支援的 hardware 滑鼠移動方式，改為 mouse_event")
+        
         print("設定檔已載入")
     except FileNotFoundError:
         print("未找到設定檔，使用預設值")

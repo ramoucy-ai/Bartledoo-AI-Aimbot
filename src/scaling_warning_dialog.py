@@ -14,7 +14,7 @@ class ScalingWarningDialog(QDialog):
         self.setup_ui()
         
     def setup_ui(self):
-        self.setWindowTitle(self.language_manager.get_text("scaling_warning_title", "⚠️ 系統設定問題"))
+        self.setWindowTitle(self.language_manager.get_text("scaling_warning_title", "系統設定問題"))
         self.setFixedSize(650, 550)
         self.setStyleSheet("""
             QDialog {

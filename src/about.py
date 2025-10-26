@@ -110,7 +110,7 @@ class AboutWindow:
         
         # Discord 按鈕
         discord_btn = tk.Button(button_frame, 
-                               text=f"💬 {get_text('join_discord')}", 
+                               text=f"{get_text('join_discord')}", 
                                command=self.open_discord,
                                bg="#5865F2", 
                                fg="white",
@@ -123,7 +123,7 @@ class AboutWindow:
         
         # GitHub 按鈕
         github_btn = tk.Button(button_frame, 
-                              text=f"⭐ {get_text('view_github')}", 
+                              text=f"{get_text('view_github')}", 
                               command=self.open_github,
                               bg="#24292e", 
                               fg="white",

@@ -28,14 +28,9 @@ class PyQtOverlay(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_overlay)
         
-        # 優化：使用檢測間隔來統一更新頻率，轉換為毫秒
-        if getattr(config, 'performance_mode', False):
-            # 性能模式下使用更短的更新間隔
-            update_interval_ms = max(int(config.detect_interval * 1000), 1)  # 最小1ms，極高頻率
-        else:
-            update_interval_ms = max(int(config.detect_interval * 1000), 8)  # 最小8ms，避免過高頻率
+        # 使用與檢測間隔一致的更新頻率
+        update_interval_ms = max(int(config.detect_interval * 1000), 16)  # 最小16ms (約60fps)
         self.timer.start(update_interval_ms)
-        print(f"覆蓋層更新間隔設置為: {update_interval_ms}ms (與檢測間隔 {config.detect_interval}s 同步)")
         
         self.show()
         self.set_click_through()
@@ -53,7 +48,7 @@ class PyQtOverlay(QWidget):
             print(f"滑鼠穿透設置失敗: {e}")
 
     def update_overlay(self):
-        # 優化：批量獲取隊列數據，減少鎖定時間
+        # 從隊列獲取最新的檢測結果
         new_boxes = None
         new_confidences = None
         
@@ -67,13 +62,13 @@ class PyQtOverlay(QWidget):
         except:
             pass
         
-        # 只有獲取到新數據時才更新
+        # 更新顯示數據
         if new_boxes is not None:
             self.boxes = new_boxes
         if new_confidences is not None:
             self.confidences = new_confidences
             
-        # 優化：只有在啟用時才觸發重繪
+        # 只在功能啟用時重繪
         if self.config.AimToggle:
             self.update()
 
@@ -95,17 +90,17 @@ class PyQtOverlay(QWidget):
         painter.drawEllipse(x2 - point_size//2, y2 - point_size//2, point_size, point_size)
 
     def paintEvent(self, event):
-        if not self.config.AimToggle: # 如果關閉了功能，就不繪製
+        if not self.config.AimToggle:
             return
             
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # 優化：預設FOV和Box的顯示標記
+        # 讀取顯示設置
         show_fov = getattr(self.config, 'show_fov', True)
         show_boxes = getattr(self.config, 'show_boxes', True)
         
-        # 根據開關決定是否畫FOV
+        # 繪製 FOV 框
         if show_fov:
             fov = self.config.fov_size
             cx, cy = self.config.crosshairX, self.config.crosshairY
@@ -113,16 +108,15 @@ class PyQtOverlay(QWidget):
             painter.setPen(pen)
             painter.drawRect(cx - fov // 2, cy - fov // 2, fov, fov)
 
-        # 根據開關決定是否畫人物框與概率
+        # 繪製檢測框和置信度
         if show_boxes and self.boxes:
-            pen_box = QPen(QColor(0, 255, 0, 200), 2)  # 增加線條粗細
+            pen_box = QPen(QColor(0, 255, 0, 200), 2)
             painter.setPen(pen_box)
             
-            # 優化：只有在需要顯示信心度時才設置文字畫筆和字體
             show_confidence = self.config.show_confidence
             if show_confidence:
                 pen_text = QPen(QColor(255, 255, 0, 220), 1)
-                font = QFont('Arial', 9, QFont.Weight.Bold)  # 縮小字體
+                font = QFont('Arial', 9, QFont.Weight.Bold)
                 painter.setFont(font)
             
             for i, box in enumerate(self.boxes):
