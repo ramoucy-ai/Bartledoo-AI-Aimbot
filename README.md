@@ -128,13 +128,11 @@ Axiom is designed for gamers who are at a disadvantage compared to regular playe
  	
 ### Minimum Requirements	
 - **OS**: Windows 10/11 (64-bit)	
-- **Python**: 3.11 or higher	
 - **RAM**: 16GB	
 - **Graphics**: gtx1060 rx580	
  	
 ### Recommended Requirements	
 - **OS**: Windows 11 (64-bit)	
-- **Python**: 3.11+	
 - **RAM**: 32GB or higher	
 - **Graphics**: rtx3060	
  	
