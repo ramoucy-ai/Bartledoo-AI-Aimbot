@@ -149,7 +149,7 @@ class SettingsWindow:
         logo_img = logo_img.resize((64, 64), LANCZOS_FILTER)
         self.logo_photo = ImageTk.PhotoImage(logo_img)
         tk.Label(center_frame, image=self.logo_photo, bg=self.bg_main).pack(side="left", padx=(0, 16))
-        tk.Label(center_frame, text="Axiom V4", font=("Helvetica", 22, "bold"), bg=self.bg_main, fg=self.fg_text).pack(side="left")
+        tk.Label(center_frame, text="Bartledoo", font=("Helvetica", 22, "bold"), bg=self.bg_main, fg=self.fg_text).pack(side="left")
         
         # --- 捐款按鈕與語言切換按鈕 ---
         lang_frame = tk.Frame(center_frame, bg=self.bg_main)
