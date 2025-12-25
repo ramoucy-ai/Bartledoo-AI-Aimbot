@@ -79,11 +79,11 @@ class AboutWindow:
                 tk.Label(logo_frame, image=self.logo_photo, bg=self.bg_main).pack()
         except:
             # 如果載入logo失敗，顯示文字替代
-            tk.Label(logo_frame, text="Axiom V4", font=("Arial", 20, "bold"), 
+            tk.Label(logo_frame, text="Bartledoo", font=("Arial", 20, "bold"), 
                     bg=self.bg_main, fg=self.fg_text).pack()
         
         # 專案標題
-        title_label = tk.Label(main_frame, text="Axiom V4", 
+        title_label = tk.Label(main_frame, text="Bartledoo", 
                               font=("Arial", 24, "bold"), 
                               bg=self.bg_main, fg=self.fg_text)
         title_label.pack(pady=(0, 10))
